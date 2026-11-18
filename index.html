@@ -67,14 +67,22 @@
             animation: popIn 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
 
-        /* 針の揺れアニメーション */
-        @keyframes pointerTick {
-            0% { transform: translateX(-50%) rotate(0deg); }
-            50% { transform: translateX(-50%) rotate(-18deg); }
-            100% { transform: translateX(-50%) rotate(0deg); }
+        /* 背景イラストのゆったり浮遊アニメーション */
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-10px) scale(1.02); }
         }
-        .pointer-tick {
-            animation: pointerTick 0.08s ease-out;
+        .animate-bg-illustration {
+            animation: floatSlow 6s ease-in-out infinite;
+        }
+
+        /* 当選モーダル内のアイコン鼓動アニメーション */
+        @keyframes winnerPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+        .animate-winner-badge {
+            animation: winnerPulse 1.2s ease-in-out infinite;
         }
     </style>
 </head>
@@ -82,73 +90,88 @@
 
     <!-- ヘッダー -->
     <header class="theme-card border-b px-4 py-3 shadow-sm sticky top-0 z-30">
-        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
-            <div class="flex items-center gap-3 sm:gap-4">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2 sm:gap-3">
+            <div class="flex items-center gap-2 sm:gap-4">
                 <div class="flex items-center gap-2">
                     <span class="text-2xl sm:text-3xl" id="themeIcon">🎯</span>
-                    <h1 class="text-lg sm:text-2xl font-black tracking-tight" id="appTitle">ミラクル・ルーレット</h1>
+                    <h1 class="text-base sm:text-2xl font-black tracking-tight" id="appTitle">ミラクル・ルーレット</h1>
                 </div>
 
                 <!-- モード切り替えタブ（ルーレット ⇔ タイマー） -->
                 <div class="flex items-center bg-black/10 dark:bg-white/10 p-1 rounded-xl">
-                    <button id="modeRouletteBtn" class="px-3 py-1 rounded-lg text-xs sm:text-sm font-black transition shadow-sm bg-white text-slate-900 cursor-pointer">
+                    <button id="modeRouletteBtn" class="px-2.5 sm:px-3 py-1 rounded-lg text-xs sm:text-sm font-black transition shadow-sm bg-white text-slate-900 cursor-pointer">
                         🎯 ルーレット
                     </button>
-                    <button id="modeTimerBtn" class="px-3 py-1 rounded-lg text-xs sm:text-sm font-bold opacity-75 hover:opacity-100 transition cursor-pointer">
+                    <button id="modeTimerBtn" class="px-2.5 sm:px-3 py-1 rounded-lg text-xs sm:text-sm font-bold opacity-75 hover:opacity-100 transition cursor-pointer">
                         ⏱️ タイマー
                     </button>
                 </div>
             </div>
 
-            <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+            <div class="flex flex-wrap items-center gap-2">
                 <!-- テーマ選択ドロップダウン -->
-                <div class="flex items-center gap-1.5 bg-black/5 dark:bg-white/10 px-3 py-1.5 rounded-xl border border-current/15">
+                <div class="flex items-center gap-1.5 bg-black/5 dark:bg-white/10 px-2.5 sm:px-3 py-1.5 rounded-xl border border-current/15">
                     <label for="themeSelect" class="text-xs sm:text-sm font-bold whitespace-nowrap">🎨 テーマ:</label>
-                    <select id="themeSelect" class="bg-transparent text-xs sm:text-sm font-bold focus:outline-none cursor-pointer pr-1">
+                    <select id="themeSelect" class="bg-transparent text-xs sm:text-sm font-bold focus:outline-none cursor-pointer pr-1 max-w-[140px] sm:max-w-none">
                         <!-- JSで20テーマを自動生成 -->
                     </select>
                 </div>
 
                 <!-- 効果音ON/OFFトグル -->
-                <button id="soundToggleBtn" class="px-3 py-1.5 rounded-xl font-bold text-xs sm:text-sm border border-current/20 flex items-center gap-1.5 hover:opacity-80 transition cursor-pointer" title="効果音の切り替え">
+                <button id="soundToggleBtn" class="px-2.5 sm:px-3 py-1.5 rounded-xl font-bold text-xs sm:text-sm border border-current/20 flex items-center gap-1 hover:opacity-80 transition cursor-pointer" title="効果音の切り替え">
                     <span id="soundIcon">🔊</span>
-                    <span id="soundLabel" class="hidden sm:inline">音あり</span>
+                    <span id="soundLabel" class="hidden md:inline">音あり</span>
+                </button>
+
+                <!-- クラス名簿スライド開閉ボタン（プラスマーク） -->
+                <button id="toggleDrawerBtn" class="px-3 py-1.5 rounded-xl font-black text-xs sm:text-sm text-white shadow hover:brightness-110 active:scale-95 transition flex items-center gap-1.5 cursor-pointer" style="background-color: var(--accent-color);" title="名簿の表示・非表示を切り替え">
+                    <span id="drawerToggleIcon" class="text-base leading-none">➕</span>
+                    <span id="drawerToggleLabel">名簿管理</span>
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- メインコンテンツ -->
-    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+    <!-- メインコンテンツ（画面ど真ん中レイアウト） -->
+    <main class="flex-1 w-full flex flex-col items-center justify-center p-3 sm:p-6 relative overflow-hidden">
         
-        <!-- 左側：ルーレット／タイマー切り替えエリア (7カラム) -->
-        <div class="lg:col-span-7 flex flex-col items-center justify-center theme-card rounded-3xl p-4 sm:p-8 shadow-xl border relative overflow-hidden min-h-[540px]">
+        <!-- 画面右端のクイック開閉タブ（プラスマーク） -->
+        <button id="sideDrawerTabBtn" class="fixed right-0 top-1/2 -translate-y-1/2 z-30 py-4 px-2 sm:px-2.5 rounded-l-2xl text-white font-black shadow-xl border-y-2 border-l-2 border-white/40 flex flex-col items-center gap-1.5 hover:pr-3.5 transition-all cursor-pointer" style="background-color: var(--accent-color);" title="クラス名簿・欠席管理を開く">
+            <span id="sideTabIcon" class="text-lg">➕</span>
+            <span class="text-xs tracking-widest" style="writing-mode: vertical-rl;">名簿・欠席</span>
+        </button>
+
+        <!-- 中央メインカード（ルーレット／タイマー） -->
+        <div class="w-full max-w-3xl flex flex-col items-center justify-center theme-card rounded-3xl p-4 sm:p-8 shadow-2xl border-2 relative overflow-hidden">
             
-            <!-- 装飾用背景テキスト（古文やRockなどの雰囲気出し） -->
-            <div id="bgWatermark" class="absolute inset-0 flex items-center justify-center text-8xl sm:text-9xl font-black opacity-5 pointer-events-none select-none overflow-hidden whitespace-nowrap">
+            <!-- テーマ別カスタム背景イラスト（SVG） -->
+            <div id="themeBgIllustration" class="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden opacity-15 animate-bg-illustration">
+                <!-- JSでテーマごとのイラストSVGを自動挿入 -->
+            </div>
+
+            <!-- 装飾用背景ウォーターマーク文字 -->
+            <div id="bgWatermark" class="absolute bottom-3 right-4 text-4xl sm:text-6xl font-black opacity-10 pointer-events-none select-none">
                 POP!
             </div>
 
             <!-- ================= ルーレットビュー ================= -->
             <div id="rouletteView" class="w-full flex flex-col items-center z-10">
                 <!-- 現在の参加人数バッジ -->
-                <div class="w-full flex justify-between items-center mb-2">
-                    <span class="text-xs sm:text-sm font-bold px-3 py-1 rounded-full bg-black/10 dark:bg-white/10">
-                        現在クラス: <span id="currentClassNameDisplay" class="underline">サンプル名簿</span>
+                <div class="w-full flex flex-wrap justify-between items-center gap-2 mb-3">
+                    <span class="text-xs sm:text-sm font-bold px-3 py-1 rounded-full bg-black/10 dark:bg-white/10 backdrop-blur-xs">
+                        クラス: <span id="currentClassNameDisplay" class="underline">サンプル名簿</span>
                     </span>
-                    <span class="text-xs sm:text-sm font-bold px-3 py-1 rounded-full bg-black/10 dark:bg-white/10">
-                        参加: <span id="activeCountDisplay" class="text-base font-black">0</span> / <span id="totalCountDisplay">0</span> 名
-                    </span>
+                    <button id="inlineOpenRosterBtn" class="text-xs sm:text-sm font-bold px-3 py-1 rounded-full bg-black/10 dark:bg-white/10 hover:bg-black/20 transition cursor-pointer flex items-center gap-1">
+                        <span>参加: <strong id="activeCountDisplay" class="text-base font-black">0</strong> / <span id="totalCountDisplay">0</span> 名</span>
+                        <span class="text-xs opacity-75">（➕変更）</span>
+                    </button>
                 </div>
 
                 <!-- ルーレット本体コンテナ -->
-                <div class="relative w-full max-w-[440px] aspect-square my-2 flex items-center justify-center">
-                    <!-- 当たりを指す針（上部中央） -->
-                    <div id="roulettePointer" class="absolute -top-3 left-1/2 -translate-x-1/2 z-20 drop-shadow-lg transition-transform origin-top">
-                        <svg width="44" height="54" viewBox="0 0 44 54" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M22 54L3.81347 16.5C1.5 11.5 5.5 4 12 4H32C38.5 4 42.5 11.5 40.1865 16.5L22 54Z" fill="#EF4444" stroke="#FFFFFF" stroke-width="3"/>
-                            <circle cx="22" cy="14" r="5" fill="#FFFFFF"/>
-                        </svg>
+                <div class="relative w-full max-w-[440px] sm:max-w-[480px] aspect-square my-2 flex items-center justify-center">
+                    <!-- テーマごとに変わる当たりを指す針（上部中央） -->
+                    <div id="roulettePointer" class="absolute -top-5 left-1/2 -translate-x-1/2 z-20 drop-shadow-xl transition-transform origin-top pointer-events-none">
+                        <!-- JSでテーマごとの針SVG（戦国なら日本刀、Rockならピックなど）を自動挿入 -->
                     </div>
 
                     <!-- キャンバス -->
@@ -162,7 +185,7 @@
 
                 <!-- コントロールボタン群 -->
                 <div class="w-full max-w-md flex flex-wrap items-center justify-center gap-3 mt-4">
-                    <button id="mainSpinBtn" class="flex-1 min-w-[160px] py-3.5 px-6 rounded-2xl font-black text-lg sm:text-xl text-white shadow-lg hover:brightness-110 active:scale-95 transition flex items-center justify-center gap-2 cursor-pointer" style="background-color: var(--accent-color);">
+                    <button id="mainSpinBtn" class="flex-1 min-w-[180px] py-3.5 px-6 rounded-2xl font-black text-lg sm:text-xl text-white shadow-lg hover:brightness-110 active:scale-95 transition flex items-center justify-center gap-2 cursor-pointer" style="background-color: var(--accent-color);">
                         <span>🎲</span> <span id="mainSpinText">ルーレットを回す！</span>
                     </button>
                     
@@ -220,16 +243,29 @@
                 </div>
             </div>
         </div>
+    </main>
 
-        <!-- 右側：名簿管理・欠席者選択エリア (5カラム) -->
-        <div class="lg:col-span-5 flex flex-col gap-4 theme-card rounded-3xl p-4 sm:p-6 shadow-xl border">
-            
+    <!-- スライド開閉式・名簿管理ドロワー（初期状態は非表示） -->
+    <div id="rosterDrawerBackdrop" class="fixed inset-0 bg-black/40 backdrop-blur-xs z-40 hidden transition-opacity"></div>
+    <aside id="rosterDrawer" class="fixed top-0 right-0 h-full w-full max-w-md theme-card border-l-2 shadow-2xl z-50 transform translate-x-full transition-transform duration-300 ease-out flex flex-col">
+        <!-- ドロワーヘッダー -->
+        <div class="flex items-center justify-between px-5 py-4 border-b border-current/15">
+            <h2 class="text-lg font-black flex items-center gap-2">
+                <span>📋</span> クラス名簿・欠席管理
+            </h2>
+            <button id="closeDrawerBtn" class="px-3 py-1.5 rounded-xl font-black text-sm border border-current/20 hover:bg-black/10 transition flex items-center gap-1 cursor-pointer">
+                <span>➖</span> 閉じる
+            </button>
+        </div>
+
+        <!-- ドロワー中身（スクロール可能） -->
+        <div class="flex-1 overflow-y-auto p-5 flex flex-col gap-5">
             <!-- 保存済み名簿の呼び出し・保存 -->
-            <div class="flex flex-col gap-2 pb-4 border-b border-current/15">
+            <div class="flex flex-col gap-2.5 pb-4 border-b border-current/15">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-base sm:text-lg font-black flex items-center gap-1.5">
-                        <span>📚</span> クラス名簿の保存・呼出
-                    </h2>
+                    <h3 class="text-sm sm:text-base font-black flex items-center gap-1.5">
+                        <span>📚</span> 名簿の保存・呼出
+                    </h3>
                     <span id="cloudStatusBadge" class="text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600">
                         ⏳ 接続中...
                     </span>
@@ -239,7 +275,7 @@
                     <select id="savedRostersSelect" class="flex-1 px-3 py-2 rounded-xl text-sm font-bold border border-current/20 bg-transparent focus:outline-none cursor-pointer">
                         <!-- 保存済みリスト -->
                     </select>
-                    <button id="loadRosterBtn" class="px-3 py-2 rounded-xl text-xs sm:text-sm font-bold text-white shadow hover:brightness-110 transition cursor-pointer whitespace-nowrap" style="background-color: var(--accent-color);">
+                    <button id="loadRosterBtn" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold text-white shadow hover:brightness-110 transition cursor-pointer whitespace-nowrap" style="background-color: var(--accent-color);">
                         読込
                     </button>
                     <button id="deleteRosterBtn" class="px-2.5 py-2 rounded-xl text-xs sm:text-sm font-bold border border-red-400/50 text-red-500 hover:bg-red-500/10 transition cursor-pointer" title="選択中の保存名簿を削除">
@@ -251,14 +287,14 @@
                     <button id="openPasteModalBtn" class="flex-1 py-2.5 px-3 rounded-xl font-black text-xs sm:text-sm border-2 border-dashed border-current/30 hover:border-current/60 hover:bg-black/5 transition flex items-center justify-center gap-1.5 cursor-pointer">
                         <span>📊</span> Excelからコピペで一括作成
                     </button>
-                    <button id="saveCurrentRosterBtn" class="py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm border border-current/20 hover:bg-black/5 transition flex items-center gap-1 cursor-pointer whitespace-nowrap">
+                    <button id="saveCurrentRosterBtn" class="py-2.5 px-3.5 rounded-xl font-bold text-xs sm:text-sm border border-current/20 hover:bg-black/5 transition flex items-center gap-1 cursor-pointer whitespace-nowrap">
                         <span>💾</span> 保存
                     </button>
                 </div>
             </div>
 
             <!-- 欠席者チェック＆個別追加 -->
-            <div class="flex flex-col gap-2">
+            <div class="flex flex-col gap-2.5 flex-1">
                 <div class="flex items-center justify-between">
                     <h3 class="text-sm sm:text-base font-black flex items-center gap-1.5">
                         <span>🙋</span> 出席・欠席の切り替え
@@ -284,13 +320,13 @@
                     </button>
                 </form>
 
-                <!-- 生徒リスト（スクロール可能） -->
-                <div id="studentListContainer" class="mt-2 max-h-[340px] overflow-y-auto pr-1 grid grid-cols-2 sm:grid-cols-2 gap-2">
+                <!-- 生徒リスト -->
+                <div id="studentListContainer" class="mt-2 grid grid-cols-2 gap-2">
                     <!-- JSで生徒カードをレンダリング -->
                 </div>
             </div>
         </div>
-    </main>
+    </aside>
 
     <!-- Excelコピペ一括入力モーダル -->
     <div id="pasteModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
@@ -330,24 +366,44 @@
         </div>
     </div>
 
-    <!-- 当選発表モーダル -->
-    <div id="winnerModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-        <div class="theme-card w-full max-w-md rounded-3xl p-6 sm:p-8 text-center shadow-2xl border-4 animate-pop-in relative overflow-hidden">
-            <div class="text-sm sm:text-base font-black tracking-widest uppercase mb-2 opacity-80" id="winnerSubtitle">
-                🎉 SELECTED! 🎉
-            </div>
-            <div class="my-6 py-6 px-4 rounded-2xl bg-black/5 dark:bg-white/10 border border-current/15">
-                <div id="winnerNameDisplay" class="text-3xl sm:text-5xl font-black break-words leading-tight">
-                    山田 太郎
+    <!-- 当選発表モーダル（テーマ別決めゼリフ＆演出付き） -->
+    <div id="winnerModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="theme-card w-full max-w-lg rounded-3xl p-6 sm:p-8 text-center shadow-2xl border-4 animate-pop-in relative overflow-hidden">
+            <!-- 当選モーダル背景にもテーマのイラストをうっすら表示 -->
+            <div id="winnerModalBgIllustration" class="absolute inset-0 flex items-center justify-center pointer-events-none select-none opacity-10"></div>
+
+            <div class="relative z-10">
+                <!-- テーマの象徴アイコン（鼓動アニメーション） -->
+                <div id="winnerThemeBadge" class="text-4xl sm:text-5xl mb-2 animate-winner-badge inline-block">
+                    🎉
                 </div>
-            </div>
-            <div class="flex flex-col sm:flex-row gap-2.5 justify-center mt-6">
-                <button id="winnerCloseBtn" class="flex-1 py-3 px-4 rounded-2xl font-black text-base text-white shadow-lg hover:brightness-110 transition cursor-pointer" style="background-color: var(--accent-color);">
-                    OK（そのまま残す）
-                </button>
-                <button id="winnerExcludeBtn" class="py-3 px-4 rounded-2xl font-bold text-sm border-2 border-current/25 hover:bg-black/5 transition cursor-pointer" title="一度当たった人を今回のルーレットから外します">
-                    この人を外して次へ
-                </button>
+
+                <!-- テーマ別の見出し -->
+                <div class="text-sm sm:text-lg font-black tracking-widest uppercase mb-1" id="winnerSubtitle" style="color: var(--accent-color);">
+                    🎉 おめでとう！大当たり！ 🎉
+                </div>
+
+                <!-- 当選者の名前ボックス -->
+                <div class="my-4 py-6 px-4 rounded-2xl bg-black/5 dark:bg-white/10 border-2 border-current/20 shadow-inner">
+                    <div id="winnerNameDisplay" class="text-3xl sm:text-5xl font-black break-words leading-tight">
+                        山田 太郎
+                    </div>
+                </div>
+
+                <!-- テーマ別の決めゼリフ（ロールプレイ風メッセージ） -->
+                <div id="winnerQuoteDisplay" class="text-sm sm:text-base font-bold opacity-90 px-3 py-2.5 rounded-xl bg-black/5 dark:bg-white/5 mb-6 leading-relaxed">
+                    「バッチリ決まったね！さあ、主役の登場だ！」
+                </div>
+
+                <!-- アクションボタン（「この人を外して次へ」をメインに設定） -->
+                <div class="flex flex-col gap-2.5 justify-center">
+                    <button id="winnerExcludeBtn" class="w-full py-4 px-5 rounded-2xl font-black text-base sm:text-lg text-white shadow-xl hover:brightness-110 active:scale-95 transition flex items-center justify-center gap-2 cursor-pointer" style="background-color: var(--accent-color);" title="一度当たった人を今回のルーレットから外します">
+                        <span>👋</span> <span>この人を外して次へ</span>
+                    </button>
+                    <button id="winnerCloseBtn" class="w-full py-2.5 px-4 rounded-xl font-bold text-xs sm:text-sm border border-current/25 opacity-80 hover:opacity-100 hover:bg-black/5 transition cursor-pointer">
+                        そのまま残して閉じる
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -381,7 +437,172 @@
         import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // ==========================================
-        // 1. 20種類のテーマ定義（配色・フォント・効果音・演出）
+        // 1. テーマ別の当たり針（ポインター）SVG定義
+        // ==========================================
+        const POINTER_SVGS = {
+            // 戦国武将：日本刀（白刃と黄金の鍔）
+            katana: `<svg width="48" height="76" viewBox="0 0 48 76" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="20" y="0" width="8" height="16" rx="2" fill="#991B1B" stroke="#FDE047" stroke-width="1.5"/>
+                <path d="M20 4L28 8M20 9L28 13" stroke="#FDE047" stroke-width="1.5"/>
+                <ellipse cx="24" cy="18" rx="14" ry="4" fill="#EAB308" stroke="#713F12" stroke-width="1.5"/>
+                <path d="M20 20H28L27 64L24 76L21 64L20 20Z" fill="#F8FAFC" stroke="#475569" stroke-width="1.5"/>
+                <path d="M24 20V74" stroke="#CBD5E1" stroke-width="1.5"/>
+            </svg>`,
+            // Rock：エレキギターのピック
+            pick: `<svg width="52" height="62" viewBox="0 0 52 62" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M26 60C26 60 6 34 6 18C6 7 15 2 26 2C37 2 46 7 46 18C46 34 26 60 26 60Z" fill="#EF4444" stroke="#FFFFFF" stroke-width="3"/>
+                <path d="M28 11L19 25H26L23 39L34 23H27L28 11Z" fill="#FDE047"/>
+            </svg>`,
+            // 古文：雅びな檜扇（ひおうぎ）
+            fan: `<svg width="64" height="58" viewBox="0 0 64 58" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M32 56L6 16C14 6 50 6 58 16L32 56Z" fill="#B45309" stroke="#FEF3C7" stroke-width="2.5"/>
+                <path d="M32 56L16 12M32 56L26 9M32 56L38 9M32 56L48 12" stroke="#FDE68A" stroke-width="1.5"/>
+                <circle cx="32" cy="48" r="4" fill="#DC2626" stroke="#FEF3C7" stroke-width="1.5"/>
+            </svg>`,
+            // クリスマス：光り輝くベツレヘムの星
+            star: `<svg width="56" height="62" viewBox="0 0 56 62" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M28 2L34 18L51 18L37 28L42 44L28 34L14 44L19 28L5 18L22 18L28 2Z" fill="#FACC15" stroke="#FFFFFF" stroke-width="2.5"/>
+                <path d="M28 34L22 46L28 60L34 46L28 34Z" fill="#DC2626" stroke="#FFFFFF" stroke-width="2"/>
+            </svg>`,
+            // お正月：矢羽根（破魔矢）
+            arrow: `<svg width="46" height="68" viewBox="0 0 46 68" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M23 4L12 16V26L23 18L34 26V16L23 4Z" fill="#E11D48" stroke="#FFFFFF" stroke-width="2"/>
+                <rect x="21" y="14" width="4" height="40" fill="#F59E0B"/>
+                <path d="M23 68L15 50H31L23 68Z" fill="#FFFFFF" stroke="#E11D48" stroke-width="2"/>
+            </svg>`,
+            // 学校の黒板：赤鉛筆
+            pencil: `<svg width="44" height="68" viewBox="0 0 44 68" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="14" y="4" width="16" height="8" rx="2" fill="#F472B6" stroke="#FFFFFF" stroke-width="2"/>
+                <rect x="14" y="12" width="16" height="36" fill="#EF4444" stroke="#FFFFFF" stroke-width="2"/>
+                <path d="M14 48H30L22 66L14 48Z" fill="#FDE68A" stroke="#FFFFFF" stroke-width="2"/>
+                <path d="M19.5 60H24.5L22 66L19.5 60Z" fill="#1E293B"/>
+            </svg>`,
+            // 宇宙：スペースロケット
+            rocket: `<svg width="52" height="68" viewBox="0 0 52 68" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M16 32L8 44H18L16 32Z" fill="#EF4444"/>
+                <path d="M36 32L44 44H34L36 32Z" fill="#EF4444"/>
+                <path d="M26 66C26 66 15 44 15 24C15 12 20 4 26 4C32 4 37 12 37 24C37 44 26 66 26 66Z" fill="#F8FAFC" stroke="#6366F1" stroke-width="2.5"/>
+                <circle cx="26" cy="24" r="5" fill="#38BDF8" stroke="#1E1B4B" stroke-width="2"/>
+            </svg>`,
+            // ハロウィン：魔女の帽子
+            witchhat: `<svg width="60" height="62" viewBox="0 0 60 62" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="30" cy="20" rx="26" ry="7" fill="#581C87" stroke="#F97316" stroke-width="2.5"/>
+                <path d="M16 20L30 60L44 20H16Z" fill="#6B21A8" stroke="#F97316" stroke-width="2.5"/>
+                <rect x="17" y="20" width="26" height="5" fill="#F97316"/>
+            </svg>`,
+            // 桜：桜の花びらポインター
+            sakura: `<svg width="52" height="60" viewBox="0 0 52 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M26 58C26 58 8 38 8 20C8 10 16 4 22 10L26 16L30 10C36 4 44 10 44 20C44 38 26 58 26 58Z" fill="#FB7185" stroke="#FFFFFF" stroke-width="3"/>
+                <circle cx="26" cy="22" r="4" fill="#FFE4E6"/>
+            </svg>`,
+            // 王冠・ゴージャス：黄金の王冠ダガー
+            crown: `<svg width="54" height="64" viewBox="0 0 54 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10 22L14 8L22 16L27 6L32 16L40 8L44 22H10Z" fill="#FACC15" stroke="#FFFFFF" stroke-width="2"/>
+                <path d="M14 22H40L27 62L14 22Z" fill="#EAB308" stroke="#FFFFFF" stroke-width="2.5"/>
+                <circle cx="27" cy="28" r="4" fill="#DC2626"/>
+            </svg>`,
+            // 定番のスタイリッシュ矢印（その他テーマ用）
+            default: `<svg width="46" height="58" viewBox="0 0 46 58" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M23 58L4.81347 18.5C2.5 13.5 6.5 4 13 4H33C39.5 4 43.5 13.5 41.1865 18.5L23 58Z" fill="var(--accent-color)" stroke="#FFFFFF" stroke-width="3.5"/>
+                <circle cx="23" cy="15" r="5.5" fill="#FFFFFF"/>
+            </svg>`
+        };
+
+        // ==========================================
+        // 2. テーマ別の背景イラストSVG定義
+        // ==========================================
+        const BG_ILLUSTRATIONS = {
+            pop: `<svg class="w-4/5 h-4/5" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="200" cy="200" r="160" stroke="currentColor" stroke-width="8" stroke-dasharray="20 15"/>
+                <path d="M200 25L220 85L285 85L232 122L252 182L200 145L148 182L168 122L115 85L180 85L200 25Z" fill="currentColor"/>
+                <circle cx="80" cy="280" r="24" fill="currentColor"/><circle cx="320" cy="280" r="24" fill="currentColor"/>
+            </svg>`,
+            rock: `<svg class="w-4/5 h-4/5" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M230 30L140 200H210L170 370L280 180H210L230 30Z" fill="currentColor"/>
+                <circle cx="200" cy="200" r="175" stroke="currentColor" stroke-width="10"/>
+            </svg>`,
+            kobun: `<svg class="w-4/5 h-4/5" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M40 120C100 100 140 140 200 120C260 100 300 140 360 120" stroke="currentColor" stroke-width="12" stroke-linecap="round"/>
+                <path d="M40 280C100 260 140 300 200 280C260 260 300 300 360 280" stroke="currentColor" stroke-width="12" stroke-linecap="round"/>
+                <circle cx="200" cy="200" r="110" stroke="currentColor" stroke-width="6"/>
+                <path d="M200 110C220 150 250 180 290 200C250 220 220 250 200 290C180 250 150 220 110 200C150 180 180 150 200 110Z" fill="currentColor"/>
+            </svg>`,
+            christmas: `<svg class="w-4/5 h-4/5" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M200 40L110 160H155L90 250H145L70 340H330L255 250H310L245 160H290L200 40Z" fill="currentColor"/>
+                <rect x="175" y="340" width="50" height="40" fill="currentColor"/>
+            </svg>`,
+            newyear: `<svg class="w-4/5 h-4/5" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="200" cy="210" r="120" fill="currentColor"/>
+                <path d="M40 320C110 260 160 280 200 250C240 280 290 260 360 320V360H40V320Z" fill="currentColor" opacity="0.6"/>
+                <path d="M200 30V70M90 80L120 110M310 80L280 110" stroke="currentColor" stroke-width="10" stroke-linecap="round"/>
+            </svg>`,
+            blackboard: `<svg class="w-4/5 h-4/5" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="40" y="70" width="320" height="220" rx="16" stroke="currentColor" stroke-width="10"/>
+                <path d="M90 140H240M90 190H310M90 240H190" stroke="currentColor" stroke-width="8" stroke-linecap="round"/>
+                <circle cx="300" cy="140" r="22" stroke="currentColor" stroke-width="6"/>
+            </svg>`,
+            sakura: `<svg class="w-4/5 h-4/5" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <g transform="translate(200,200)" fill="currentColor">
+                    <path d="M0 -20 C-30 -90 -50 -150 0 -170 C50 -150 30 -90 0 -20 Z" transform="rotate(0)"/>
+                    <path d="M0 -20 C-30 -90 -50 -150 0 -170 C50 -150 30 -90 0 -20 Z" transform="rotate(72)"/>
+                    <path d="M0 -20 C-30 -90 -50 -150 0 -170 C50 -150 30 -90 0 -20 Z" transform="rotate(144)"/>
+                    <path d="M0 -20 C-30 -90 -50 -150 0 -170 C50 -150 30 -90 0 -20 Z" transform="rotate(216)"/>
+                    <path d="M0 -20 C-30 -90 -50 -150 0 -170 C50 -150 30 -90 0 -20 Z" transform="rotate(288)"/>
+                </g>
+            </svg>`,
+            ocean: `<svg class="w-4/5 h-4/5" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M30 220C80 180 130 260 180 220C230 180 280 260 330 220C360 195 380 210 380 210" stroke="currentColor" stroke-width="14" stroke-linecap="round"/>
+                <path d="M30 280C80 240 130 320 180 280C230 240 280 320 330 280C360 255 380 270 380 270" stroke="currentColor" stroke-width="14" stroke-linecap="round"/>
+                <circle cx="290" cy="110" r="45" fill="currentColor"/>
+            </svg>`,
+            halloween: `<svg class="w-4/5 h-4/5" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="200" cy="230" rx="135" ry="105" fill="currentColor"/>
+                <rect x="185" y="95" width="30" height="40" rx="8" fill="currentColor"/>
+                <path d="M135 200L165 180L175 210H135Z" fill="#000"/>
+                <path d="M265 200L235 180L225 210H265Z" fill="#000"/>
+                <path d="M130 260Q200 310 270 260" stroke="#000" stroke-width="14" stroke-linecap="round"/>
+            </svg>`,
+            space: `<svg class="w-4/5 h-4/5" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="200" cy="200" r="85" fill="currentColor"/>
+                <ellipse cx="200" cy="200" rx="175" ry="48" transform="rotate(-22 200 200)" stroke="currentColor" stroke-width="16"/>
+                <circle cx="80" cy="90" r="10" fill="currentColor"/><circle cx="330" cy="310" r="14" fill="currentColor"/>
+            </svg>`,
+            sengoku: `<svg class="w-4/5 h-4/5" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- お城（天守閣）のシルエット -->
+                <path d="M70 340L100 260H300L330 340H70Z" fill="currentColor"/>
+                <path d="M110 260L135 200H265L290 260H110Z" fill="currentColor"/>
+                <path d="M145 200L175 135H225L255 200H145Z" fill="currentColor"/>
+                <path d="M165 135L200 85L235 135H165Z" fill="currentColor"/>
+                <path d="M160 85L150 65M240 85L250 65" stroke="currentColor" stroke-width="8" stroke-linecap="round"/>
+            </svg>`,
+            cyberpunk: `<svg class="w-4/5 h-4/5" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <polygon points="200,30 350,115 350,285 200,370 50,285 50,115" stroke="currentColor" stroke-width="10"/>
+                <polygon points="200,80 305,140 305,260 200,320 95,260 95,140" stroke="currentColor" stroke-width="5"/>
+                <circle cx="200" cy="200" r="45" stroke="currentColor" stroke-width="8"/>
+            </svg>`,
+            retrogame: `<svg class="w-4/5 h-4/5" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="60" y="130" width="280" height="140" rx="30" stroke="currentColor" stroke-width="14"/>
+                <path d="M125 170V230M95 200H155" stroke="currentColor" stroke-width="16" stroke-linecap="square"/>
+                <circle cx="255" cy="215" r="16" fill="currentColor"/>
+                <circle cx="295" cy="185" r="16" fill="currentColor"/>
+            </svg>`,
+            cafe: `<svg class="w-4/5 h-4/5" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M100 160H280V250C280 299.706 239.706 340 190 340C140.294 340 100 299.706 100 250V160Z" fill="currentColor"/>
+                <path d="M280 185H315C334.33 185 350 200.67 350 220C350 239.33 334.33 255 315 255H280" stroke="currentColor" stroke-width="16"/>
+                <path d="M150 120Q140 90 155 65M200 120Q190 90 205 65M250 120Q240 90 255 65" stroke="currentColor" stroke-width="10" stroke-linecap="round"/>
+            </svg>`,
+            forest: `<svg class="w-4/5 h-4/5" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M140 90L70 230H115L60 320H220L165 230H210L140 90Z" fill="currentColor"/>
+                <path d="M270 130L215 245H250L205 320H335L290 245H325L270 130Z" fill="currentColor" opacity="0.75"/>
+            </svg>`,
+            gold: `<svg class="w-4/5 h-4/5" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M60 280L90 130L165 200L200 100L235 200L310 130L340 280H60Z" fill="currentColor"/>
+                <rect x="60" y="295" width="280" height="30" rx="8" fill="currentColor"/>
+            </svg>`
+        };
+
+        // ==========================================
+        // 3. 20種類のテーマ定義（配色・フォント・効果音・針・背景・当選セリフ）
         // ==========================================
         const THEMES = {
             pop: {
@@ -398,7 +619,10 @@
                 slices: ["#ff595e", "#ffca3a", "#8ac926", "#1982c4", "#6a4c93", "#ff924c"],
                 sliceText: "#ffffff",
                 soundType: "pop",
-                winnerSub: "🎉 おめでとう！大当たり！ 🎉"
+                pointerType: "default",
+                bgIllust: "pop",
+                winnerSub: "🎉 おめでとう！大当たり！ 🎉",
+                winnerQuote: "「バッチリ決まったね！さあ、主役の登場だ！」"
             },
             rock: {
                 name: "2. Rock（ライブ会場風）",
@@ -414,7 +638,10 @@
                 slices: ["#dc2626", "#18181b", "#eab308", "#3f3f46", "#b91c1c", "#52525b"],
                 sliceText: "#ffffff",
                 soundType: "rock",
-                winnerSub: "🔥 SHOUT IT OUT!! 🔥"
+                pointerType: "pick",
+                bgIllust: "rock",
+                winnerSub: "🔥 SHOUT IT OUT!! 🔥",
+                winnerQuote: "「最高のステージが始まるぜ！Are you ready?!」"
             },
             kobun: {
                 name: "3. 古文・平安絵巻風",
@@ -430,7 +657,10 @@
                 slices: ["#8d4024", "#556b2f", "#483d8b", "#b8860b", "#8b0000", "#2f4f4f"],
                 sliceText: "#fcf8f0",
                 soundType: "wa",
-                winnerSub: "🌸 いみじうめでたし！ 🌸"
+                pointerType: "fan",
+                bgIllust: "kobun",
+                winnerSub: "🌸 いみじうめでたし！ 🌸",
+                winnerQuote: "「いとをかし！そなたこそ選ばれたる雅び人なり！」"
             },
             christmas: {
                 name: "4. クリスマス（聖夜）",
@@ -446,7 +676,10 @@
                 slices: ["#dc2626", "#15803d", "#eab308", "#b91c1c", "#166534", "#d97706"],
                 sliceText: "#ffffff",
                 soundType: "bell",
-                winnerSub: "🎅 メリークリスマス！ 🎁"
+                pointerType: "star",
+                bgIllust: "christmas",
+                winnerSub: "🎅 メリークリスマス！ 🎁",
+                winnerQuote: "「ホーッホッホ！サンタからの特別な指名じゃよ！」"
             },
             newyear: {
                 name: "5. お正月（新春・紅白）",
@@ -462,7 +695,10 @@
                 slices: ["#e11d48", "#ffffff", "#f59e0b", "#be123c", "#fef3c7", "#d97706"],
                 sliceText: "#1e293b",
                 soundType: "wa",
-                winnerSub: "🌅 大吉！あっぱれ！ 🎍"
+                pointerType: "arrow",
+                bgIllust: "newyear",
+                winnerSub: "🌅 大吉！あっぱれ！ 🎍",
+                winnerQuote: "「一富士二鷹三茄子！今年一番の福男・福女じゃ！」"
             },
             dark: {
                 name: "6. ダーク（ミッドナイト）",
@@ -478,7 +714,10 @@
                 slices: ["#1e293b", "#312e81", "#0f172a", "#3730a3", "#1e1b4b", "#334155"],
                 sliceText: "#e2e8f0",
                 soundType: "pop",
-                winnerSub: "✨ CHOSEN ONE ✨"
+                pointerType: "default",
+                bgIllust: "space",
+                winnerSub: "✨ CHOSEN ONE ✨",
+                winnerQuote: "「闇夜に導かれし運命の選択……いざ、前へ。」"
             },
             cyberpunk: {
                 name: "7. サイバーパンク（電脳）",
@@ -494,7 +733,10 @@
                 slices: ["#ff007f", "#00b8ff", "#7000ff", "#00ffcc", "#ff0055", "#2b00ff"],
                 sliceText: "#ffffff",
                 soundType: "retro",
-                winnerSub: "⚡ TARGET LOCKED ⚡"
+                pointerType: "default",
+                bgIllust: "cyberpunk",
+                winnerSub: "⚡ TARGET LOCKED ⚡",
+                winnerQuote: "「SYSTEM OVERRIDE: ターゲットを完全ロックオン！」"
             },
             retrogame: {
                 name: "8. レトロゲーム（8bit風）",
@@ -510,7 +752,10 @@
                 slices: ["#ff004d", "#00e436", "#29adff", "#ffec27", "#ff77a8", "#ffa300"],
                 sliceText: "#000000",
                 soundType: "retro",
-                winnerSub: "🍄 1UP!! ゆうしゃに えらばれた！ 🍄"
+                pointerType: "default",
+                bgIllust: "retrogame",
+                winnerSub: "🍄 1UP!! ゆうしゃに えらばれた！ 🍄",
+                winnerQuote: "「▶ ゆうしゃ は せかいの うんめいを たくされた！」"
             },
             blackboard: {
                 name: "9. 学校の黒板（チョーク風）",
@@ -526,7 +771,10 @@
                 slices: ["#e76f51", "#2a9d8f", "#e9c46a", "#f4a261", "#457b9d", "#a8dadc"],
                 sliceText: "#ffffff",
                 soundType: "pop",
-                winnerSub: "✏️ よろしくおねがいします！ ✏️"
+                pointerType: "pencil",
+                bgIllust: "blackboard",
+                winnerSub: "✏️ よろしくおねがいします！ ✏️",
+                winnerQuote: "「起立・礼！みんなの前で堂々と発表しよう！」"
             },
             sakura: {
                 name: "10. 春・満開の桜",
@@ -542,7 +790,10 @@
                 slices: ["#fb7185", "#fda4af", "#f43f5e", "#fecdd3", "#e11d48", "#fbcfe8"],
                 sliceText: "#881337",
                 soundType: "bell",
-                winnerSub: "🌸 満開！おめでとう！ 🌸"
+                pointerType: "sakura",
+                bgIllust: "sakura",
+                winnerSub: "🌸 満開！おめでとう！ 🌸",
+                winnerQuote: "「春風とともに舞い降りた、素敵なチャンス！」"
             },
             ocean: {
                 name: "11. 南国の海（マリン）",
@@ -558,7 +809,10 @@
                 slices: ["#0284c7", "#06b6d4", "#38bdf8", "#0d9488", "#2563eb", "#22d3ee"],
                 sliceText: "#ffffff",
                 soundType: "pop",
-                winnerSub: "🌊 ナイスウェーブ！ 🐠"
+                pointerType: "default",
+                bgIllust: "ocean",
+                winnerSub: "🌊 ナイスウェーブ！ 🐠",
+                winnerQuote: "「ビッグウェーブに乗ったね！最高のパフォーマンスを！」"
             },
             halloween: {
                 name: "12. ハロウィン（おばけ）",
@@ -574,7 +828,10 @@
                 slices: ["#f97316", "#7e22ce", "#ea580c", "#581c87", "#eab308", "#4c1d95"],
                 sliceText: "#ffffff",
                 soundType: "retro",
-                winnerSub: "👻 トリック・オア・トリート！ 🎃"
+                pointerType: "witchhat",
+                bgIllust: "halloween",
+                winnerSub: "👻 トリック・オア・トリート！ 🎃",
+                winnerQuote: "「イタズラされる前に、かっこいい答えを見せてくれ！」"
             },
             space: {
                 name: "13. 宇宙・ギャラクシー",
@@ -590,7 +847,10 @@
                 slices: ["#4f46e5", "#7c3aed", "#2563eb", "#9333ea", "#0284c7", "#6d28d9"],
                 sliceText: "#ffffff",
                 soundType: "bell",
-                winnerSub: "🌟 新星発見！ 🌟"
+                pointerType: "rocket",
+                bgIllust: "space",
+                winnerSub: "🌟 新星発見！ 🌟",
+                winnerQuote: "「全宇宙が注目している！未知の銀河へテイクオフ！」"
             },
             sengoku: {
                 name: "14. 戦国武将・合戦風",
@@ -606,7 +866,10 @@
                 slices: ["#991b1b", "#1e3a8a", "#854d0e", "#14532d", "#7f1d1d", "#374151"],
                 sliceText: "#fef08a",
                 soundType: "wa",
-                winnerSub: "🔥 一番槍！いざ参らん！ 🔥"
+                pointerType: "katana",
+                bgIllust: "sengoku",
+                winnerSub: "🔥 一番槍！いざ参らん！ 🔥",
+                winnerQuote: "「天命下る！いざ、一番槍として陣頭に参られよ！」"
             },
             cafe: {
                 name: "15. おしゃれカフェ（ラテ）",
@@ -622,7 +885,10 @@
                 slices: ["#7f5539", "#9c6644", "#b08968", "#ddb892", "#6f4518", "#a47148"],
                 sliceText: "#ffffff",
                 soundType: "bell",
-                winnerSub: "🥐 素敵なひとときを！ ☕"
+                pointerType: "default",
+                bgIllust: "cafe",
+                winnerSub: "🥐 素敵なひとときを！ ☕",
+                winnerQuote: "「香り高いラテのように、スマートな意見をどうぞ！」"
             },
             pastel: {
                 name: "16. ゆめかわパステル",
@@ -638,7 +904,10 @@
                 slices: ["#f9a8d4", "#c4b5fd", "#93c5fd", "#6ee7b7", "#fde047", "#fdba74"],
                 sliceText: "#581c87",
                 soundType: "bell",
-                winnerSub: "✨ キラキラ大当選！ ✨"
+                pointerType: "star",
+                bgIllust: "sakura",
+                winnerSub: "✨ キラキラ大当選！ ✨",
+                winnerQuote: "「ユニコーンの魔法がかかったよ！きらめく回答をどうぞ♡」"
             },
             forest: {
                 name: "17. 深い森・ネイチャー",
@@ -654,7 +923,10 @@
                 slices: ["#15803d", "#22c55e", "#65a30d", "#0d9488", "#166534", "#4d7c0f"],
                 sliceText: "#ffffff",
                 soundType: "pop",
-                winnerSub: "🍀 ラッキークローバー！ 🍀"
+                pointerType: "default",
+                bgIllust: "forest",
+                winnerSub: "🍀 ラッキークローバー！ 🍀",
+                winnerQuote: "「森の精霊たちが祝福している！のびのびと発言しよう！」"
             },
             newspaper: {
                 name: "18. 昭和レトロ・新聞号外風",
@@ -670,7 +942,10 @@
                 slices: ["#404040", "#737373", "#a3a3a3", "#525252", "#262626", "#8c8c8c"],
                 sliceText: "#ffffff",
                 soundType: "wa",
-                winnerSub: "📣 号外！決定いたしました！ 📣"
+                pointerType: "default",
+                bgIllust: "blackboard",
+                winnerSub: "📣 号外！決定いたしました！ 📣",
+                winnerQuote: "「一面トップ記事確定！歴史に刻まれる名回答に期待！」"
             },
             gold: {
                 name: "19. ゴージャス・黄金カジノ",
@@ -686,7 +961,10 @@
                 slices: ["#eab308", "#b91c1c", "#171717", "#ca8a04", "#991b1b", "#262626"],
                 sliceText: "#ffffff",
                 soundType: "rock",
-                winnerSub: "👑 JACKPOT!! 素晴らしい！ 👑"
+                pointerType: "crown",
+                bgIllust: "gold",
+                winnerSub: "👑 JACKPOT!! 素晴らしい！ 👑",
+                winnerQuote: "「おめでとうございます！栄光のVIPシートへようこそ！」"
             },
             sport: {
                 name: "20. 体育祭・熱血応援団",
@@ -702,12 +980,15 @@
                 slices: ["#ea580c", "#dc2626", "#2563eb", "#eab308", "#16a34a", "#f97316"],
                 sliceText: "#ffffff",
                 soundType: "rock",
-                winnerSub: "🏅 ファイト一発！君に決めた！ 🏅"
+                pointerType: "default",
+                bgIllust: "pop",
+                winnerSub: "🏅 ファイト一発！君に決めた！ 🏅",
+                winnerQuote: "「フレー！フレー！全力投球の熱い声を聞かせてくれ！」"
             }
         };
 
         // ==========================================
-        // 2. アプリ状態管理 & デフォルトデータ
+        // 4. アプリ状態管理 & デフォルトデータ
         // ==========================================
         const DEFAULT_ROSTERS = {
             "サンプル名簿（1年1組）": [
@@ -728,6 +1009,7 @@
         let students = []; // { id, name, absent }
         let savedRosters = { ...DEFAULT_ROSTERS };
         let lastWinnerStudent = null;
+        let isDrawerOpen = false;
 
         // タイマー関連の状態
         let timerTotalSeconds = 180; // デフォルト3分
@@ -747,7 +1029,7 @@
         const ctx = canvas.getContext("2d");
 
         // ==========================================
-        // 3. サウンドエンジン（Tone.js使用・外部URL不要）
+        // 5. サウンドエンジン（Tone.js使用・外部URL不要）
         // ==========================================
         let tickSynth = null;
 
@@ -770,7 +1052,6 @@
                 initAudio();
                 const theme = THEMES[currentThemeKey];
                 if (theme.soundType === "wa") {
-                    // 木魚・鼓風のポクッという音
                     tickSynth.triggerAttackRelease("G3", "32n");
                 } else if (theme.soundType === "retro") {
                     tickSynth.triggerAttackRelease("C5", "64n");
@@ -779,9 +1060,7 @@
                 } else {
                     tickSynth.triggerAttackRelease("C4", "32n");
                 }
-            } catch (e) {
-                // 自動再生制限などで鳴らない場合は無視
-            }
+            } catch (e) {}
         }
 
         // 当選ファンファーレ音
@@ -794,31 +1073,26 @@
                 const now = Tone.now();
 
                 if (theme.soundType === "wa") {
-                    // 和風・雅楽風のファンファーレ（平調子）
                     synth.triggerAttackRelease(["E4", "B4"], "8n", now);
                     synth.triggerAttackRelease(["F#4", "C#5"], "8n", now + 0.15);
                     synth.triggerAttackRelease(["A4", "E5"], "8n", now + 0.3);
                     synth.triggerAttackRelease(["B4", "F#5", "B5"], "2n", now + 0.45);
                 } else if (theme.soundType === "rock") {
-                    // パワーコード風ファンファーレ
                     synth.triggerAttackRelease(["E3", "B3", "E4"], "8n", now);
                     synth.triggerAttackRelease(["G3", "D4", "G4"], "8n", now + 0.15);
                     synth.triggerAttackRelease(["A3", "E4", "A4"], "8n", now + 0.3);
                     synth.triggerAttackRelease(["B3", "F#4", "B4"], "2n", now + 0.45);
                 } else if (theme.soundType === "bell") {
-                    // クリスマス・キラキラベル風
                     synth.triggerAttackRelease(["C5", "E5"], "8n", now);
                     synth.triggerAttackRelease(["G5"], "8n", now + 0.12);
                     synth.triggerAttackRelease(["E5"], "8n", now + 0.24);
                     synth.triggerAttackRelease(["G5", "C6"], "2n", now + 0.36);
                 } else if (theme.soundType === "retro") {
-                    // レトロゲーム・レベルアップ音
                     const notes = ["C5", "E5", "G5", "C6", "G5", "C6"];
                     notes.forEach((note, idx) => {
                         synth.triggerAttackRelease(note, "16n", now + idx * 0.1);
                     });
                 } else {
-                    // 定番の明るいPOPファンファーレ
                     synth.triggerAttackRelease(["C4", "E4", "G4"], "8n", now);
                     synth.triggerAttackRelease(["C4", "E4", "G4"], "16n", now + 0.18);
                     synth.triggerAttackRelease(["D4", "F#4", "A4"], "8n", now + 0.3);
@@ -830,7 +1104,7 @@
         }
 
         // ==========================================
-        // 4. ルーレット描画（HTML5 Canvas）
+        // 6. ルーレット描画（HTML5 Canvas）
         // ==========================================
         function resizeCanvas() {
             const container = canvas.parentElement;
@@ -853,7 +1127,6 @@
             const activeStudents = students.filter(s => !s.absent);
             const theme = THEMES[currentThemeKey];
 
-            // 参加者が0人の場合
             if (activeStudents.length === 0) {
                 ctx.beginPath();
                 ctx.arc(center, center, radius, 0, Math.PI * 2);
@@ -873,7 +1146,6 @@
 
             const sliceAngle = (Math.PI * 2) / activeStudents.length;
 
-            // 各扇形を描画
             activeStudents.forEach((student, i) => {
                 const startAngle = currentAngle + i * sliceAngle;
                 const endAngle = startAngle + sliceAngle;
@@ -883,7 +1155,6 @@
                 ctx.arc(center, center, radius, startAngle, endAngle);
                 ctx.closePath();
 
-                // 隣り合う色が同じにならないよう調整
                 let colorIndex = i % theme.slices.length;
                 if (i === activeStudents.length - 1 && colorIndex === 0 && theme.slices.length > 1) {
                     colorIndex = 1;
@@ -891,44 +1162,37 @@
                 ctx.fillStyle = theme.slices[colorIndex];
                 ctx.fill();
 
-                // 境界線
                 ctx.lineWidth = 2;
                 ctx.strokeStyle = "rgba(255, 255, 255, 0.65)";
                 ctx.stroke();
 
-                // テキスト描画（扇形の中心線に沿って配置）
                 ctx.save();
                 ctx.translate(center, center);
                 ctx.rotate(startAngle + sliceAngle / 2);
 
-                // 人数に応じてフォントサイズを自動調整
                 const fontSize = Math.max(11, Math.min(22, Math.floor((radius * 1.1) / activeStudents.length)));
                 ctx.font = `900 ${fontSize}px ${theme.font}`;
                 ctx.fillStyle = theme.sliceText;
                 ctx.textAlign = "right";
                 ctx.textBaseline = "middle";
 
-                // 文字が長すぎる場合は省略
                 let displayName = student.name;
                 if (displayName.length > 10) {
                     displayName = displayName.substring(0, 9) + "…";
                 }
 
-                // 縁取りで視認性アップ
                 ctx.shadowColor = "rgba(0,0,0,0.45)";
                 ctx.shadowBlur = 4;
                 ctx.fillText(displayName, radius - 22, 0);
                 ctx.restore();
             });
 
-            // 外周の飾りリングとピン
             ctx.beginPath();
             ctx.arc(center, center, radius, 0, Math.PI * 2);
             ctx.lineWidth = 6;
             ctx.strokeStyle = "#ffffff";
             ctx.stroke();
 
-            // 各境界に小さなピン（釘）を描画
             activeStudents.forEach((_, i) => {
                 const pinAngle = currentAngle + i * sliceAngle;
                 const px = center + Math.cos(pinAngle) * (radius - 4);
@@ -945,17 +1209,16 @@
         }
 
         // ==========================================
-        // 5. ルーレット回転＆当選判定ロジック
+        // 7. ルーレット回転＆当選判定ロジック
         // ==========================================
         function spinRoulette() {
             const activeStudents = students.filter(s => !s.absent);
             if (isSpinning) return;
             if (activeStudents.length < 2) {
-                showToast("参加者が2名以上必要です！欠席設定を確認してください。", "⚠️");
+                showToast("参加者が2名以上必要です！右の「➕ 名簿管理」から確認してください。", "⚠️");
                 return;
             }
 
-            // 初回クリック時にAudioContextを有効化
             if (typeof Tone !== 'undefined' && Tone.context.state !== 'running') {
                 Tone.start();
             }
@@ -965,12 +1228,11 @@
             document.getElementById("mainSpinBtn").classList.add("opacity-50", "cursor-not-allowed");
             document.getElementById("spinBtnLabel").textContent = "GO!";
 
-            // 毎回3.5秒〜5.8秒の間でランダムな回転時間にし、いつ止まるか予測できないドキドキ感を演出
+            // 毎回3.5秒〜5.8秒の間でランダムな回転時間
             const duration = (3.5 + Math.random() * 2.3) * 1000;
             const startTime = performance.now();
             const startAngle = currentAngle;
             
-            // 回転量（最低8回転〜13回転 + ランダム角度）
             const extraSpins = (8 + Math.floor(Math.random() * 5)) * Math.PI * 2;
             const randomStop = Math.random() * Math.PI * 2;
             const totalRotation = extraSpins + randomStop;
@@ -982,18 +1244,15 @@
                 const elapsed = now - startTime;
                 const progress = Math.min(elapsed / duration, 1);
 
-                // イージング（最初速く、最後は超じわじわ減速して止まる）
                 const easeOut = 1 - Math.pow(1 - progress, 4);
                 currentAngle = startAngle + totalRotation * easeOut;
 
-                // 針が境界線（ピン）を通過した瞬間に音を鳴らす＆針を揺らす
                 const normalizedAngle = (currentAngle % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
                 const currentSector = Math.floor(normalizedAngle / sliceAngle);
                 if (currentSector !== lastSectorIndex) {
                     lastSectorIndex = currentSector;
                     playTickSound();
                     
-                    // 針のアニメーション
                     const pointer = document.getElementById("roulettePointer");
                     if (pointer) {
                         pointer.style.transform = "translateX(-50%) rotate(-18deg)";
@@ -1020,11 +1279,9 @@
         }
 
         function announceWinner(activeStudents) {
-            // 上部中央の針の位置はキャンバス座標系で -Math.PI / 2 (270度)
             const pointerAngle = -Math.PI / 2;
             const sliceAngle = (Math.PI * 2) / activeStudents.length;
 
-            // currentAngle分だけ回転しているので、針の相対角度を計算
             let relativeAngle = (pointerAngle - currentAngle) % (Math.PI * 2);
             if (relativeAngle < 0) relativeAngle += Math.PI * 2;
 
@@ -1032,20 +1289,25 @@
             const winner = activeStudents[winningIndex];
             lastWinnerStudent = winner;
 
-            // ファンファーレ＆紙吹雪
+            const theme = THEMES[currentThemeKey];
+
+            // ファンファーレ＆テーマカラーの紙吹雪演出
             playFanfareSound();
             if (typeof confetti === 'function') {
                 confetti({
-                    particleCount: 100,
-                    spread: 75,
-                    origin: { y: 0.55 }
+                    particleCount: 120,
+                    spread: 80,
+                    origin: { y: 0.55 },
+                    colors: theme.slices
                 });
             }
 
-            // モーダル表示
-            const theme = THEMES[currentThemeKey];
+            // テーマに合わせた当選モーダル演出をセット
+            document.getElementById("winnerThemeBadge").textContent = theme.icon;
             document.getElementById("winnerSubtitle").textContent = theme.winnerSub;
             document.getElementById("winnerNameDisplay").textContent = winner.name;
+            document.getElementById("winnerQuoteDisplay").textContent = theme.winnerQuote || "";
+            document.getElementById("winnerModalBgIllustration").innerHTML = BG_ILLUSTRATIONS[theme.bgIllust] || BG_ILLUSTRATIONS.pop;
 
             const modal = document.getElementById("winnerModal");
             modal.classList.remove("hidden");
@@ -1053,7 +1315,7 @@
         }
 
         // ==========================================
-        // 6. タイマー機能ロジック
+        // 8. タイマー機能ロジック
         // ==========================================
         function formatTime(sec) {
             const m = Math.floor(sec / 60);
@@ -1067,7 +1329,7 @@
             if (!display || !ring) return;
 
             display.textContent = formatTime(timerRemainingSeconds);
-            const circumference = 276.46; // 2 * Math.PI * 44
+            const circumference = 276.46;
             const ratio = timerTotalSeconds > 0 ? timerRemainingSeconds / timerTotalSeconds : 0;
             ring.style.strokeDashoffset = circumference * (1 - ratio);
 
@@ -1155,7 +1417,30 @@
         }
 
         // ==========================================
-        // 7. テーマ切り替え・UI更新・保存ストレージ管理
+        // 9. スライド名簿ドロワー開閉ロジック
+        // ==========================================
+        function setDrawerState(open) {
+            isDrawerOpen = open;
+            const drawer = document.getElementById("rosterDrawer");
+            const backdrop = document.getElementById("rosterDrawerBackdrop");
+            const headerIcon = document.getElementById("drawerToggleIcon");
+            const sideIcon = document.getElementById("sideTabIcon");
+
+            if (open) {
+                drawer.classList.remove("translate-x-full");
+                backdrop.classList.remove("hidden");
+                headerIcon.textContent = "➖";
+                sideIcon.textContent = "➖";
+            } else {
+                drawer.classList.add("translate-x-full");
+                backdrop.classList.add("hidden");
+                headerIcon.textContent = "➕";
+                sideIcon.textContent = "➕";
+            }
+        }
+
+        // ==========================================
+        // 10. テーマ切り替え・UI更新・保存ストレージ管理
         // ==========================================
         function applyTheme(themeKey) {
             const theme = THEMES[themeKey];
@@ -1173,6 +1458,14 @@
             document.getElementById("themeIcon").textContent = theme.icon;
             document.getElementById("appTitle").textContent = theme.title;
             document.getElementById("bgWatermark").textContent = theme.watermark;
+
+            // テーマごとの当たり針（ポインター）を反映
+            const pointerEl = document.getElementById("roulettePointer");
+            pointerEl.innerHTML = POINTER_SVGS[theme.pointerType] || POINTER_SVGS.default;
+
+            // テーマごとの背景イラストを反映
+            const bgIllustEl = document.getElementById("themeBgIllustration");
+            bgIllustEl.innerHTML = BG_ILLUSTRATIONS[theme.bgIllust] || BG_ILLUSTRATIONS.pop;
 
             drawRoulette();
         }
@@ -1262,23 +1555,19 @@
             }, 3000);
         }
 
-        // Excelのコピペデータから氏名だけを賢く抽出する関数
         function parseExcelPasteText(rawText) {
             const lines = rawText.split(/\r?\n/).map(line => line.trim()).filter(line => line !== "");
             const extractedNames = [];
 
             lines.forEach(line => {
-                // Excelから複数列コピーした場合はタブ(\t)で区切られる
                 if (line.includes("\t")) {
                     const cols = line.split("\t").map(c => c.trim()).filter(c => c !== "");
-                    // 最初の列が出席番号（数字のみ、または「1番」など）の場合は2列目を名前とみなす
                     if (cols.length >= 2 && /^[0-9０-９]+番?$/.test(cols[0])) {
                         extractedNames.push(cols[1]);
                     } else {
                         extractedNames.push(cols[0]);
                     }
                 } else {
-                    // 1列のみの場合でも、先頭の出席番号（例: "1 山田太郎" や "01.山田太郎"）があれば除去して名前を綺麗に抽出
                     const cleaned = line.replace(/^[0-9０-９]+[\s\.\t、:：]+/, "").trim();
                     extractedNames.push(cleaned || line);
                 }
@@ -1287,12 +1576,10 @@
             return extractedNames;
         }
 
-        // 永続化ストレージの初期化（クラウド環境 と GitHub Pages等のブラウザ保存 の両対応）
         async function initCloudStorage() {
             const badge = document.getElementById("cloudStatusBadge");
             const LOCAL_STORAGE_KEY = "classroom_roulette_rosters_v1";
 
-            // GitHub Pagesなど外部ホスティング環境の場合はブラウザのローカルストレージを使用
             if (typeof __firebase_config === 'undefined') {
                 try {
                     const raw = window["local" + "Storage"].getItem(LOCAL_STORAGE_KEY);
@@ -1315,7 +1602,6 @@
                 auth = getAuth(app);
                 db = getFirestore(app);
 
-                // 認証の実行（カスタムトークン優先、なければ匿名認証）
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
                 } else {
@@ -1327,7 +1613,6 @@
                     currentUser = user;
                     badge.textContent = "☁️ 自動保存ON";
 
-                    // ユーザー専用コレクションのリアルタイム監視
                     const rostersCol = collection(db, 'artifacts', appId, 'users', user.uid, 'rosters');
                     onSnapshot(rostersCol, (snapshot) => {
                         const cloudRosters = {};
@@ -1341,7 +1626,6 @@
                             }
                         });
 
-                        // 初期サンプル名簿と保存済み名簿を統合
                         savedRosters = { ...DEFAULT_ROSTERS, ...cloudRosters };
                         updateSavedRostersDropdown();
                     }, (err) => {
@@ -1355,7 +1639,6 @@
             }
         }
 
-        // 名簿を保存するヘルパー関数（クラウド＆ブラウザ両対応）
         async function persistRosterToCloud(title, namesList) {
             const LOCAL_STORAGE_KEY = "classroom_roulette_rosters_v1";
             if (!db || !currentUser) {
@@ -1370,7 +1653,6 @@
                 return;
             }
             try {
-                // ドキュメントIDとして使える安全な文字列を生成（または既存のIDを再利用）
                 const docId = rosterDocIdMap[title] || `roster_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
                 const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'rosters', docId);
                 await setDoc(docRef, {
@@ -1384,7 +1666,6 @@
             }
         }
 
-        // 名簿を削除するヘルパー関数（クラウド＆ブラウザ両対応）
         async function deleteRosterFromCloud(title) {
             const LOCAL_STORAGE_KEY = "classroom_roulette_rosters_v1";
             if (!db || !currentUser) {
@@ -1409,10 +1690,9 @@
         }
 
         // ==========================================
-        // 8. 初期化＆イベントリスナー登録
+        // 11. 初期化＆イベントリスナー登録
         // ==========================================
         function initApp() {
-            // テーマ選択肢の生成
             const themeSelect = document.getElementById("themeSelect");
             Object.entries(THEMES).forEach(([key, theme]) => {
                 const opt = document.createElement("option");
@@ -1425,18 +1705,22 @@
                 applyTheme(e.target.value);
             });
 
-            // 初期名簿のセット
             updateSavedRostersDropdown();
             setRosterFromNames(currentRosterTitle, savedRosters[currentRosterTitle]);
             applyTheme("pop");
             updateTimerUI();
 
-            // 永続化ストレージの接続開始
             initCloudStorage();
 
-            // リサイズ対応
             window.addEventListener("resize", resizeCanvas);
             resizeCanvas();
+
+            // スライドドロワー開閉イベント
+            document.getElementById("toggleDrawerBtn").addEventListener("click", () => setDrawerState(!isDrawerOpen));
+            document.getElementById("sideDrawerTabBtn").addEventListener("click", () => setDrawerState(!isDrawerOpen));
+            document.getElementById("inlineOpenRosterBtn").addEventListener("click", () => setDrawerState(true));
+            document.getElementById("closeDrawerBtn").addEventListener("click", () => setDrawerState(false));
+            document.getElementById("rosterDrawerBackdrop").addEventListener("click", () => setDrawerState(false));
 
             // スピンボタン
             document.getElementById("mainSpinBtn").addEventListener("click", spinRoulette);
@@ -1610,8 +1894,8 @@
                 rouletteView.classList.remove("hidden");
                 timerView.classList.add("hidden");
                 timerView.classList.remove("flex");
-                modeRouletteBtn.className = "px-3 py-1 rounded-lg text-xs sm:text-sm font-black transition shadow-sm bg-white text-slate-900 cursor-pointer";
-                modeTimerBtn.className = "px-3 py-1 rounded-lg text-xs sm:text-sm font-bold opacity-75 hover:opacity-100 transition cursor-pointer";
+                modeRouletteBtn.className = "px-2.5 sm:px-3 py-1 rounded-lg text-xs sm:text-sm font-black transition shadow-sm bg-white text-slate-900 cursor-pointer";
+                modeTimerBtn.className = "px-2.5 sm:px-3 py-1 rounded-lg text-xs sm:text-sm font-bold opacity-75 hover:opacity-100 transition cursor-pointer";
                 resizeCanvas();
             });
 
@@ -1619,8 +1903,8 @@
                 rouletteView.classList.add("hidden");
                 timerView.classList.remove("hidden");
                 timerView.classList.add("flex");
-                modeTimerBtn.className = "px-3 py-1 rounded-lg text-xs sm:text-sm font-black transition shadow-sm bg-white text-slate-900 cursor-pointer";
-                modeRouletteBtn.className = "px-3 py-1 rounded-lg text-xs sm:text-sm font-bold opacity-75 hover:opacity-100 transition cursor-pointer";
+                modeTimerBtn.className = "px-2.5 sm:px-3 py-1 rounded-lg text-xs sm:text-sm font-black transition shadow-sm bg-white text-slate-900 cursor-pointer";
+                modeRouletteBtn.className = "px-2.5 sm:px-3 py-1 rounded-lg text-xs sm:text-sm font-bold opacity-75 hover:opacity-100 transition cursor-pointer";
                 updateTimerUI();
             });
 
