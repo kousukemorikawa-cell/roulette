@@ -89,12 +89,12 @@
 <body class="min-h-screen flex flex-col">
 
     <!-- ヘッダー -->
-    <header class="theme-card border-b px-4 py-3 shadow-sm sticky top-0 z-30">
+    <header class="theme-card border-b px-4 py-2.5 shadow-sm sticky top-0 z-30">
         <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2 sm:gap-3">
             <div class="flex items-center gap-2 sm:gap-4">
                 <div class="flex items-center gap-2">
                     <span class="text-2xl sm:text-3xl" id="themeIcon">🎯</span>
-                    <h1 class="text-base sm:text-2xl font-black tracking-tight" id="appTitle">ミラクル・ルーレット</h1>
+                    <h1 class="text-base sm:text-xl font-black tracking-tight" id="appTitle">ミラクル・ルーレット</h1>
                 </div>
 
                 <!-- モード切り替えタブ（ルーレット ⇔ タイマー） -->
@@ -123,26 +123,26 @@
                     <span id="soundLabel" class="hidden md:inline">音あり</span>
                 </button>
 
-                <!-- クラス名簿スライド開閉ボタン（プラスマーク） -->
-                <button id="toggleDrawerBtn" class="px-3 py-1.5 rounded-xl font-black text-xs sm:text-sm text-white shadow hover:brightness-110 active:scale-95 transition flex items-center gap-1.5 cursor-pointer" style="background-color: var(--accent-color);" title="名簿の表示・非表示を切り替え">
+                <!-- クラス名簿・設定スライド開閉ボタン（プラスマーク） -->
+                <button id="toggleDrawerBtn" class="px-3 py-1.5 rounded-xl font-black text-xs sm:text-sm text-white shadow hover:brightness-110 active:scale-95 transition flex items-center gap-1.5 cursor-pointer" style="background-color: var(--accent-color);" title="名簿・回り方設定の表示切替">
                     <span id="drawerToggleIcon" class="text-base leading-none">➕</span>
-                    <span id="drawerToggleLabel">名簿管理</span>
+                    <span id="drawerToggleLabel">名簿・設定</span>
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- メインコンテンツ（画面ど真ん中レイアウト） -->
-    <main class="flex-1 w-full flex flex-col items-center justify-center p-3 sm:p-6 relative overflow-hidden">
+    <!-- メインコンテンツ（画面いっぱいレイアウト） -->
+    <main class="flex-1 w-full flex flex-col items-center justify-center p-2 sm:p-4 relative overflow-hidden">
         
         <!-- 画面右端のクイック開閉タブ（プラスマーク） -->
-        <button id="sideDrawerTabBtn" class="fixed right-0 top-1/2 -translate-y-1/2 z-30 py-4 px-2 sm:px-2.5 rounded-l-2xl text-white font-black shadow-xl border-y-2 border-l-2 border-white/40 flex flex-col items-center gap-1.5 hover:pr-3.5 transition-all cursor-pointer" style="background-color: var(--accent-color);" title="クラス名簿・欠席管理を開く">
+        <button id="sideDrawerTabBtn" class="fixed right-0 top-1/2 -translate-y-1/2 z-30 py-4 px-2 sm:px-2.5 rounded-l-2xl text-white font-black shadow-xl border-y-2 border-l-2 border-white/40 flex flex-col items-center gap-1.5 hover:pr-3.5 transition-all cursor-pointer" style="background-color: var(--accent-color);" title="クラス名簿・設定を開く">
             <span id="sideTabIcon" class="text-lg">➕</span>
-            <span class="text-xs tracking-widest" style="writing-mode: vertical-rl;">名簿・欠席</span>
+            <span class="text-xs tracking-widest" style="writing-mode: vertical-rl;">名簿・設定</span>
         </button>
 
-        <!-- 中央メインカード（ルーレット／タイマー） -->
-        <div class="w-full max-w-3xl flex flex-col items-center justify-center theme-card rounded-3xl p-4 sm:p-8 shadow-2xl border-2 relative overflow-hidden">
+        <!-- 中央メインカード（画面いっぱいに広がるサイズ） -->
+        <div class="w-full max-w-6xl flex-1 flex flex-col items-center justify-center theme-card rounded-3xl p-3 sm:p-6 shadow-2xl border-2 relative overflow-hidden">
             
             <!-- テーマ別カスタム背景イラスト（SVG） -->
             <div id="themeBgIllustration" class="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden opacity-15 animate-bg-illustration">
@@ -150,28 +150,33 @@
             </div>
 
             <!-- 装飾用背景ウォーターマーク文字 -->
-            <div id="bgWatermark" class="absolute bottom-3 right-4 text-4xl sm:text-6xl font-black opacity-10 pointer-events-none select-none">
+            <div id="bgWatermark" class="absolute bottom-3 right-5 text-4xl sm:text-6xl font-black opacity-10 pointer-events-none select-none">
                 POP!
             </div>
 
             <!-- ================= ルーレットビュー ================= -->
-            <div id="rouletteView" class="w-full flex flex-col items-center z-10">
-                <!-- 現在の参加人数バッジ -->
-                <div class="w-full flex flex-wrap justify-between items-center gap-2 mb-3">
-                    <span class="text-xs sm:text-sm font-bold px-3 py-1 rounded-full bg-black/10 dark:bg-white/10 backdrop-blur-xs">
-                        クラス: <span id="currentClassNameDisplay" class="underline">サンプル名簿</span>
-                    </span>
+            <div id="rouletteView" class="w-full h-full flex flex-col items-center justify-between z-10">
+                <!-- 現在の参加人数・回り方バッジ -->
+                <div class="w-full flex flex-wrap justify-between items-center gap-2 mb-1">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="text-xs sm:text-sm font-bold px-3 py-1 rounded-full bg-black/10 dark:bg-white/10 backdrop-blur-xs">
+                            クラス: <span id="currentClassNameDisplay" class="underline">サンプル名簿</span>
+                        </span>
+                        <span id="currentSpinStyleBadge" class="text-xs font-bold px-2.5 py-1 rounded-full bg-black/10 dark:bg-white/10 hidden sm:inline-block">
+                            ⚙️ 標準回転
+                        </span>
+                    </div>
                     <button id="inlineOpenRosterBtn" class="text-xs sm:text-sm font-bold px-3 py-1 rounded-full bg-black/10 dark:bg-white/10 hover:bg-black/20 transition cursor-pointer flex items-center gap-1">
                         <span>参加: <strong id="activeCountDisplay" class="text-base font-black">0</strong> / <span id="totalCountDisplay">0</span> 名</span>
                         <span class="text-xs opacity-75">（➕変更）</span>
                     </button>
                 </div>
 
-                <!-- ルーレット本体コンテナ -->
-                <div class="relative w-full max-w-[440px] sm:max-w-[480px] aspect-square my-2 flex items-center justify-center">
+                <!-- ルーレット本体コンテナ（画面の高さと幅に合わせて最大限大きく表示） -->
+                <div id="rouletteWrapper" class="relative my-2 flex items-center justify-center" style="width: min(86vw, 66vh, 660px); height: min(86vw, 66vh, 660px);">
                     <!-- テーマごとに変わる当たりを指す針（上部中央） -->
-                    <div id="roulettePointer" class="absolute -top-5 left-1/2 -translate-x-1/2 z-20 drop-shadow-xl transition-transform origin-top pointer-events-none">
-                        <!-- JSでテーマごとの針SVG（戦国なら日本刀、Rockならピックなど）を自動挿入 -->
+                    <div id="roulettePointer" class="absolute -top-6 left-1/2 -translate-x-1/2 z-20 drop-shadow-xl transition-transform origin-top pointer-events-none">
+                        <!-- JSでテーマごとの針SVGを自動挿入 -->
                     </div>
 
                     <!-- キャンバス -->
@@ -184,12 +189,12 @@
                 </div>
 
                 <!-- コントロールボタン群 -->
-                <div class="w-full max-w-md flex flex-wrap items-center justify-center gap-3 mt-4">
-                    <button id="mainSpinBtn" class="flex-1 min-w-[180px] py-3.5 px-6 rounded-2xl font-black text-lg sm:text-xl text-white shadow-lg hover:brightness-110 active:scale-95 transition flex items-center justify-center gap-2 cursor-pointer" style="background-color: var(--accent-color);">
+                <div class="w-full max-w-lg flex flex-wrap items-center justify-center gap-3 mt-2">
+                    <button id="mainSpinBtn" class="flex-1 min-w-[200px] py-3 sm:py-3.5 px-6 rounded-2xl font-black text-lg sm:text-xl text-white shadow-lg hover:brightness-110 active:scale-95 transition flex items-center justify-center gap-2 cursor-pointer" style="background-color: var(--accent-color);">
                         <span>🎲</span> <span id="mainSpinText">ルーレットを回す！</span>
                     </button>
                     
-                    <button id="shuffleBtn" class="py-3.5 px-4 rounded-2xl font-bold text-sm border-2 border-current/20 hover:bg-black/5 active:scale-95 transition flex items-center gap-1 cursor-pointer" title="順番をシャッフル">
+                    <button id="shuffleBtn" class="py-3 sm:py-3.5 px-4 rounded-2xl font-bold text-sm border-2 border-current/20 hover:bg-black/5 active:scale-95 transition flex items-center gap-1 cursor-pointer" title="順番をシャッフル">
                         <span>🔀</span> シャッフル
                     </button>
                 </div>
@@ -197,7 +202,7 @@
 
             <!-- ================= タイマービュー ================= -->
             <div id="timerView" class="hidden w-full flex-col items-center justify-center z-10 py-2">
-                <div class="w-full flex justify-between items-center mb-4">
+                <div class="w-full flex justify-between items-center mb-2">
                     <span class="text-xs sm:text-sm font-bold px-3 py-1 rounded-full bg-black/10 dark:bg-white/10">
                         ⏱️ シンキング・グループワーク用タイマー
                     </span>
@@ -207,7 +212,7 @@
                 </div>
 
                 <!-- 円形プログレスタイマー -->
-                <div class="relative w-64 h-64 sm:w-80 sm:h-80 my-4 flex items-center justify-center">
+                <div class="relative w-64 h-64 sm:w-80 sm:h-80 my-3 flex items-center justify-center">
                     <svg class="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
                         <circle cx="50" cy="50" r="44" stroke="currentColor" stroke-width="6" fill="transparent" class="opacity-15" />
                         <circle id="timerProgressRing" cx="50" cy="50" r="44" stroke="var(--accent-color)" stroke-width="6" stroke-dasharray="276.46" stroke-dashoffset="0" stroke-linecap="round" fill="transparent" class="transition-all duration-200" />
@@ -216,19 +221,27 @@
                         <div id="timerDisplay" class="text-5xl sm:text-7xl font-black tracking-wider tabular-nums">
                             03:00
                         </div>
-                        <div class="flex items-center gap-2 mt-2">
-                            <button id="timerMinus10Btn" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-black/10 dark:bg-white/10 hover:opacity-80 cursor-pointer">-10秒</button>
-                            <button id="timerPlus10Btn" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-black/10 dark:bg-white/10 hover:opacity-80 cursor-pointer">+10秒</button>
+                        <!-- 1分刻み ＆ 10秒刻みの微調整ボタン -->
+                        <div class="flex items-center gap-1.5 mt-3">
+                            <button id="timerMinus1MinBtn" class="px-2.5 py-1 rounded-lg text-xs font-black bg-black/10 dark:bg-white/10 hover:opacity-80 cursor-pointer">-1分</button>
+                            <button id="timerMinus10Btn" class="px-2 py-1 rounded-lg text-xs font-bold bg-black/5 dark:bg-white/5 hover:opacity-80 cursor-pointer">-10秒</button>
+                            <button id="timerPlus10Btn" class="px-2 py-1 rounded-lg text-xs font-bold bg-black/5 dark:bg-white/5 hover:opacity-80 cursor-pointer">+10秒</button>
+                            <button id="timerPlus1MinBtn" class="px-2.5 py-1 rounded-lg text-xs font-black bg-black/10 dark:bg-white/10 hover:opacity-80 cursor-pointer">+1分</button>
                         </div>
                     </div>
                 </div>
 
-                <!-- プリセット時間ボタン -->
-                <div class="flex flex-wrap justify-center gap-2 mb-5">
-                    <button class="timer-preset-btn px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold border border-current/20 hover:bg-black/5 cursor-pointer" data-seconds="30">30秒</button>
+                <!-- 1分刻みプリセット時間ボタン（1分〜10分） -->
+                <div class="w-full max-w-xl flex flex-wrap justify-center gap-1.5 sm:gap-2 mb-5">
                     <button class="timer-preset-btn px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold border border-current/20 hover:bg-black/5 cursor-pointer" data-seconds="60">1分</button>
+                    <button class="timer-preset-btn px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold border border-current/20 hover:bg-black/5 cursor-pointer" data-seconds="120">2分</button>
                     <button class="timer-preset-btn px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold border border-current/20 hover:bg-black/5 cursor-pointer" data-seconds="180">3分</button>
+                    <button class="timer-preset-btn px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold border border-current/20 hover:bg-black/5 cursor-pointer" data-seconds="240">4分</button>
                     <button class="timer-preset-btn px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold border border-current/20 hover:bg-black/5 cursor-pointer" data-seconds="300">5分</button>
+                    <button class="timer-preset-btn px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold border border-current/20 hover:bg-black/5 cursor-pointer" data-seconds="360">6分</button>
+                    <button class="timer-preset-btn px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold border border-current/20 hover:bg-black/5 cursor-pointer" data-seconds="420">7分</button>
+                    <button class="timer-preset-btn px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold border border-current/20 hover:bg-black/5 cursor-pointer" data-seconds="480">8分</button>
+                    <button class="timer-preset-btn px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold border border-current/20 hover:bg-black/5 cursor-pointer" data-seconds="540">9分</button>
                     <button class="timer-preset-btn px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold border border-current/20 hover:bg-black/5 cursor-pointer" data-seconds="600">10分</button>
                 </div>
 
@@ -245,13 +258,13 @@
         </div>
     </main>
 
-    <!-- スライド開閉式・名簿管理ドロワー（初期状態は非表示） -->
+    <!-- スライド開閉式・名簿管理＆回り方設定ドロワー -->
     <div id="rosterDrawerBackdrop" class="fixed inset-0 bg-black/40 backdrop-blur-xs z-40 hidden transition-opacity"></div>
     <aside id="rosterDrawer" class="fixed top-0 right-0 h-full w-full max-w-md theme-card border-l-2 shadow-2xl z-50 transform translate-x-full transition-transform duration-300 ease-out flex flex-col">
         <!-- ドロワーヘッダー -->
         <div class="flex items-center justify-between px-5 py-4 border-b border-current/15">
             <h2 class="text-lg font-black flex items-center gap-2">
-                <span>📋</span> クラス名簿・欠席管理
+                <span>📋</span> 名簿・回り方設定
             </h2>
             <button id="closeDrawerBtn" class="px-3 py-1.5 rounded-xl font-black text-sm border border-current/20 hover:bg-black/10 transition flex items-center gap-1 cursor-pointer">
                 <span>➖</span> 閉じる
@@ -260,7 +273,35 @@
 
         <!-- ドロワー中身（スクロール可能） -->
         <div class="flex-1 overflow-y-auto p-5 flex flex-col gap-5">
-            <!-- 保存済み名簿の呼び出し・保存 -->
+            
+            <!-- 1. ルーレットの回り方・回転時間設定 -->
+            <div class="flex flex-col gap-2.5 pb-4 border-b border-current/15 bg-black/5 dark:bg-white/5 p-3.5 rounded-2xl">
+                <h3 class="text-sm font-black flex items-center gap-1.5">
+                    <span>⚙️</span> ルーレットの回り方設定
+                </h3>
+                <div class="grid grid-cols-2 gap-2.5">
+                    <div>
+                        <label for="spinCurveSelect" class="block text-[11px] font-bold opacity-80 mb-1">回り方のタイプ</label>
+                        <select id="spinCurveSelect" class="w-full px-2.5 py-2 rounded-xl text-xs sm:text-sm font-bold border border-current/20 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none cursor-pointer">
+                            <option value="standard">標準（なめらか減速）</option>
+                            <option value="suspense">じわじわ（粘りドキドキ）</option>
+                            <option value="feint">フェイント（一度止まりかけ再加速！）</option>
+                            <option value="turbo">超高速スタート</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="spinSpeedSelect" class="block text-[11px] font-bold opacity-80 mb-1">回転時間の長さ</label>
+                        <select id="spinSpeedSelect" class="w-full px-2.5 py-2 rounded-xl text-xs sm:text-sm font-bold border border-current/20 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none cursor-pointer">
+                            <option value="random">ランダム（毎回変化）</option>
+                            <option value="short">サクッと短め（約2.5秒）</option>
+                            <option value="normal">ふつう（約4.5秒）</option>
+                            <option value="long">じっくり長め（約7秒）</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. 保存済み名簿の呼び出し・保存 -->
             <div class="flex flex-col gap-2.5 pb-4 border-b border-current/15">
                 <div class="flex items-center justify-between">
                     <h3 class="text-sm sm:text-base font-black flex items-center gap-1.5">
@@ -293,7 +334,7 @@
                 </div>
             </div>
 
-            <!-- 欠席者チェック＆個別追加 -->
+            <!-- 3. 欠席者チェック＆個別追加 -->
             <div class="flex flex-col gap-2.5 flex-1">
                 <div class="flex items-center justify-between">
                     <h3 class="text-sm sm:text-base font-black flex items-center gap-1.5">
@@ -440,7 +481,6 @@
         // 1. テーマ別の当たり針（ポインター）SVG定義
         // ==========================================
         const POINTER_SVGS = {
-            // 戦国武将：日本刀（白刃と黄金の鍔）
             katana: `<svg width="48" height="76" viewBox="0 0 48 76" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect x="20" y="0" width="8" height="16" rx="2" fill="#991B1B" stroke="#FDE047" stroke-width="1.5"/>
                 <path d="M20 4L28 8M20 9L28 13" stroke="#FDE047" stroke-width="1.5"/>
@@ -448,60 +488,50 @@
                 <path d="M20 20H28L27 64L24 76L21 64L20 20Z" fill="#F8FAFC" stroke="#475569" stroke-width="1.5"/>
                 <path d="M24 20V74" stroke="#CBD5E1" stroke-width="1.5"/>
             </svg>`,
-            // Rock：エレキギターのピック
             pick: `<svg width="52" height="62" viewBox="0 0 52 62" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M26 60C26 60 6 34 6 18C6 7 15 2 26 2C37 2 46 7 46 18C46 34 26 60 26 60Z" fill="#EF4444" stroke="#FFFFFF" stroke-width="3"/>
                 <path d="M28 11L19 25H26L23 39L34 23H27L28 11Z" fill="#FDE047"/>
             </svg>`,
-            // 古文：雅びな檜扇（ひおうぎ）
             fan: `<svg width="64" height="58" viewBox="0 0 64 58" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M32 56L6 16C14 6 50 6 58 16L32 56Z" fill="#B45309" stroke="#FEF3C7" stroke-width="2.5"/>
                 <path d="M32 56L16 12M32 56L26 9M32 56L38 9M32 56L48 12" stroke="#FDE68A" stroke-width="1.5"/>
                 <circle cx="32" cy="48" r="4" fill="#DC2626" stroke="#FEF3C7" stroke-width="1.5"/>
             </svg>`,
-            // クリスマス：光り輝くベツレヘムの星
             star: `<svg width="56" height="62" viewBox="0 0 56 62" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M28 2L34 18L51 18L37 28L42 44L28 34L14 44L19 28L5 18L22 18L28 2Z" fill="#FACC15" stroke="#FFFFFF" stroke-width="2.5"/>
                 <path d="M28 34L22 46L28 60L34 46L28 34Z" fill="#DC2626" stroke="#FFFFFF" stroke-width="2"/>
             </svg>`,
-            // お正月：矢羽根（破魔矢）
             arrow: `<svg width="46" height="68" viewBox="0 0 46 68" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M23 4L12 16V26L23 18L34 26V16L23 4Z" fill="#E11D48" stroke="#FFFFFF" stroke-width="2"/>
                 <rect x="21" y="14" width="4" height="40" fill="#F59E0B"/>
                 <path d="M23 68L15 50H31L23 68Z" fill="#FFFFFF" stroke="#E11D48" stroke-width="2"/>
             </svg>`,
-            // 学校の黒板：赤鉛筆
             pencil: `<svg width="44" height="68" viewBox="0 0 44 68" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect x="14" y="4" width="16" height="8" rx="2" fill="#F472B6" stroke="#FFFFFF" stroke-width="2"/>
                 <rect x="14" y="12" width="16" height="36" fill="#EF4444" stroke="#FFFFFF" stroke-width="2"/>
                 <path d="M14 48H30L22 66L14 48Z" fill="#FDE68A" stroke="#FFFFFF" stroke-width="2"/>
                 <path d="M19.5 60H24.5L22 66L19.5 60Z" fill="#1E293B"/>
             </svg>`,
-            // 宇宙：スペースロケット
             rocket: `<svg width="52" height="68" viewBox="0 0 52 68" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M16 32L8 44H18L16 32Z" fill="#EF4444"/>
                 <path d="M36 32L44 44H34L36 32Z" fill="#EF4444"/>
                 <path d="M26 66C26 66 15 44 15 24C15 12 20 4 26 4C32 4 37 12 37 24C37 44 26 66 26 66Z" fill="#F8FAFC" stroke="#6366F1" stroke-width="2.5"/>
                 <circle cx="26" cy="24" r="5" fill="#38BDF8" stroke="#1E1B4B" stroke-width="2"/>
             </svg>`,
-            // ハロウィン：魔女の帽子
             witchhat: `<svg width="60" height="62" viewBox="0 0 60 62" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <ellipse cx="30" cy="20" rx="26" ry="7" fill="#581C87" stroke="#F97316" stroke-width="2.5"/>
                 <path d="M16 20L30 60L44 20H16Z" fill="#6B21A8" stroke="#F97316" stroke-width="2.5"/>
                 <rect x="17" y="20" width="26" height="5" fill="#F97316"/>
             </svg>`,
-            // 桜：桜の花びらポインター
             sakura: `<svg width="52" height="60" viewBox="0 0 52 60" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M26 58C26 58 8 38 8 20C8 10 16 4 22 10L26 16L30 10C36 4 44 10 44 20C44 38 26 58 26 58Z" fill="#FB7185" stroke="#FFFFFF" stroke-width="3"/>
                 <circle cx="26" cy="22" r="4" fill="#FFE4E6"/>
             </svg>`,
-            // 王冠・ゴージャス：黄金の王冠ダガー
             crown: `<svg width="54" height="64" viewBox="0 0 54 64" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M10 22L14 8L22 16L27 6L32 16L40 8L44 22H10Z" fill="#FACC15" stroke="#FFFFFF" stroke-width="2"/>
                 <path d="M14 22H40L27 62L14 22Z" fill="#EAB308" stroke="#FFFFFF" stroke-width="2.5"/>
                 <circle cx="27" cy="28" r="4" fill="#DC2626"/>
             </svg>`,
-            // 定番のスタイリッシュ矢印（その他テーマ用）
             default: `<svg width="46" height="58" viewBox="0 0 46 58" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M23 58L4.81347 18.5C2.5 13.5 6.5 4 13 4H33C39.5 4 43.5 13.5 41.1865 18.5L23 58Z" fill="var(--accent-color)" stroke="#FFFFFF" stroke-width="3.5"/>
                 <circle cx="23" cy="15" r="5.5" fill="#FFFFFF"/>
@@ -568,7 +598,6 @@
                 <circle cx="80" cy="90" r="10" fill="currentColor"/><circle cx="330" cy="310" r="14" fill="currentColor"/>
             </svg>`,
             sengoku: `<svg class="w-4/5 h-4/5" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <!-- お城（天守閣）のシルエット -->
                 <path d="M70 340L100 260H300L330 340H70Z" fill="currentColor"/>
                 <path d="M110 260L135 200H265L290 260H110Z" fill="currentColor"/>
                 <path d="M145 200L175 135H225L255 200H145Z" fill="currentColor"/>
@@ -602,7 +631,7 @@
         };
 
         // ==========================================
-        // 3. 20種類のテーマ定義（配色・フォント・効果音・針・背景・当選セリフ）
+        // 3. 20種類のテーマ定義
         // ==========================================
         const THEMES = {
             pop: {
@@ -1011,6 +1040,10 @@
         let lastWinnerStudent = null;
         let isDrawerOpen = false;
 
+        // ルーレットの回り方設定
+        let spinCurveType = "standard"; // standard | suspense | feint | turbo
+        let spinSpeedType = "random";   // random | short | normal | long
+
         // タイマー関連の状態
         let timerTotalSeconds = 180; // デフォルト3分
         let timerRemainingSeconds = 180;
@@ -1021,7 +1054,7 @@
         let db = null;
         let auth = null;
         let currentUser = null;
-        let rosterDocIdMap = {}; // { rosterTitle: firestoreDocId }
+        let rosterDocIdMap = {};
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'classroom-roulette-app';
 
         // DOM要素
@@ -1104,7 +1137,7 @@
         }
 
         // ==========================================
-        // 6. ルーレット描画（HTML5 Canvas）
+        // 6. ルーレット描画（人数に応じた文字サイズ＆横幅自動調整）
         // ==========================================
         function resizeCanvas() {
             const container = canvas.parentElement;
@@ -1137,14 +1170,29 @@
                 ctx.stroke();
 
                 ctx.fillStyle = theme.textPrimary;
-                ctx.font = `bold 18px ${theme.font}`;
+                ctx.font = `bold 20px ${theme.font}`;
                 ctx.textAlign = "center";
                 ctx.textBaseline = "middle";
-                ctx.fillText("出席者がいません", center, center - 60);
+                ctx.fillText("出席者がいません", center, center - 70);
                 return;
             }
 
-            const sliceAngle = (Math.PI * 2) / activeStudents.length;
+            const count = activeStudents.length;
+            const sliceAngle = (Math.PI * 2) / count;
+
+            // 中央のSTARTボタン半径を考慮した「テキストが使える最大長さ」
+            const innerSafeRadius = Math.min(58, radius * 0.24);
+            const outerPadding = 22;
+            const maxTextWidth = Math.max(40, radius - innerSafeRadius - outerPadding);
+
+            // 人数に応じた最適なフォントサイズを自動計算（扇形の弧の幅と盤面半径の両方から算出）
+            const arcHeightAtMid = (radius * 0.65) * sliceAngle;
+            const idealFontSize = Math.min(
+                arcHeightAtMid * 0.68,
+                radius * 0.125,
+                34
+            );
+            const baseFontSize = Math.max(11, Math.floor(idealFontSize));
 
             activeStudents.forEach((student, i) => {
                 const startAngle = currentAngle + i * sliceAngle;
@@ -1156,66 +1204,95 @@
                 ctx.closePath();
 
                 let colorIndex = i % theme.slices.length;
-                if (i === activeStudents.length - 1 && colorIndex === 0 && theme.slices.length > 1) {
+                if (i === count - 1 && colorIndex === 0 && theme.slices.length > 1) {
                     colorIndex = 1;
                 }
                 ctx.fillStyle = theme.slices[colorIndex];
                 ctx.fill();
 
-                ctx.lineWidth = 2;
-                ctx.strokeStyle = "rgba(255, 255, 255, 0.65)";
+                ctx.lineWidth = count > 30 ? 1.2 : 2.5;
+                ctx.strokeStyle = "rgba(255, 255, 255, 0.7)";
                 ctx.stroke();
 
                 ctx.save();
                 ctx.translate(center, center);
                 ctx.rotate(startAngle + sliceAngle / 2);
 
-                const fontSize = Math.max(11, Math.min(22, Math.floor((radius * 1.1) / activeStudents.length)));
-                ctx.font = `900 ${fontSize}px ${theme.font}`;
+                ctx.font = `900 ${baseFontSize}px ${theme.font}`;
                 ctx.fillStyle = theme.sliceText;
                 ctx.textAlign = "right";
                 ctx.textBaseline = "middle";
 
                 let displayName = student.name;
-                if (displayName.length > 10) {
-                    displayName = displayName.substring(0, 9) + "…";
-                }
-
-                ctx.shadowColor = "rgba(0,0,0,0.45)";
+                // 長い名前の場合も盤面内（maxTextWidth）に美しく収まるように自動縮小
+                ctx.shadowColor = "rgba(0,0,0,0.5)";
                 ctx.shadowBlur = 4;
-                ctx.fillText(displayName, radius - 22, 0);
+                ctx.fillText(displayName, radius - outerPadding, 0, maxTextWidth);
                 ctx.restore();
             });
 
+            // 外周の白枠
             ctx.beginPath();
             ctx.arc(center, center, radius, 0, Math.PI * 2);
-            ctx.lineWidth = 6;
+            ctx.lineWidth = 7;
             ctx.strokeStyle = "#ffffff";
             ctx.stroke();
 
+            // 各境界のピン装飾
             activeStudents.forEach((_, i) => {
                 const pinAngle = currentAngle + i * sliceAngle;
                 const px = center + Math.cos(pinAngle) * (radius - 4);
                 const py = center + Math.sin(pinAngle) * (radius - 4);
 
                 ctx.beginPath();
-                ctx.arc(px, py, 3.5, 0, Math.PI * 2);
+                ctx.arc(px, py, count > 35 ? 2.5 : 4, 0, Math.PI * 2);
                 ctx.fillStyle = "#ffffff";
                 ctx.fill();
-                ctx.strokeStyle = "rgba(0,0,0,0.3)";
+                ctx.strokeStyle = "rgba(0,0,0,0.35)";
                 ctx.lineWidth = 1;
                 ctx.stroke();
             });
         }
 
         // ==========================================
-        // 7. ルーレット回転＆当選判定ロジック
+        // 7. ルーレット回転（回り方カスタマイズ対応）＆当選判定
         // ==========================================
+        function getEasedProgress(t, curveType) {
+            if (curveType === "suspense") {
+                // じわじわ：前半速く、後半かなり長く粘るドキドキ減速
+                return 1 - Math.pow(1 - t, 6);
+            } else if (curveType === "feint") {
+                // フェイント：75%地点で一度止まりかけてから、最後にもう一押し進む！
+                if (t < 0.72) {
+                    const p = t / 0.72;
+                    return 0.86 * (1 - Math.pow(1 - p, 3.5));
+                } else {
+                    const p = (t - 0.72) / 0.28;
+                    const smoothStep = p * p * (3 - 2 * p);
+                    return 0.86 + 0.14 * smoothStep;
+                }
+            } else if (curveType === "turbo") {
+                // 超高速スタート：一気に吹き上がって綺麗に減速
+                return 1 - Math.pow(1 - t, 4.5);
+            } else {
+                // 標準（なめらか減速）
+                return 1 - Math.pow(1 - t, 4);
+            }
+        }
+
+        function getSpinDurationMs() {
+            if (spinSpeedType === "short") return 2500;
+            if (spinSpeedType === "normal") return 4500;
+            if (spinSpeedType === "long") return 7000;
+            // random（毎回3.5秒〜5.8秒の間でランダム）
+            return (3.5 + Math.random() * 2.3) * 1000;
+        }
+
         function spinRoulette() {
             const activeStudents = students.filter(s => !s.absent);
             if (isSpinning) return;
             if (activeStudents.length < 2) {
-                showToast("参加者が2名以上必要です！右の「➕ 名簿管理」から確認してください。", "⚠️");
+                showToast("参加者が2名以上必要です！右の「➕ 名簿・設定」から確認してください。", "⚠️");
                 return;
             }
 
@@ -1228,12 +1305,12 @@
             document.getElementById("mainSpinBtn").classList.add("opacity-50", "cursor-not-allowed");
             document.getElementById("spinBtnLabel").textContent = "GO!";
 
-            // 毎回3.5秒〜5.8秒の間でランダムな回転時間
-            const duration = (3.5 + Math.random() * 2.3) * 1000;
+            const duration = getSpinDurationMs();
             const startTime = performance.now();
             const startAngle = currentAngle;
             
-            const extraSpins = (8 + Math.floor(Math.random() * 5)) * Math.PI * 2;
+            const baseSpins = spinCurveType === "turbo" ? 14 : (spinSpeedType === "long" ? 12 : 8);
+            const extraSpins = (baseSpins + Math.floor(Math.random() * 4)) * Math.PI * 2;
             const randomStop = Math.random() * Math.PI * 2;
             const totalRotation = extraSpins + randomStop;
 
@@ -1244,8 +1321,8 @@
                 const elapsed = now - startTime;
                 const progress = Math.min(elapsed / duration, 1);
 
-                const easeOut = 1 - Math.pow(1 - progress, 4);
-                currentAngle = startAngle + totalRotation * easeOut;
+                const eased = getEasedProgress(progress, spinCurveType);
+                currentAngle = startAngle + totalRotation * eased;
 
                 const normalizedAngle = (currentAngle % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
                 const currentSector = Math.floor(normalizedAngle / sliceAngle);
@@ -1291,7 +1368,6 @@
 
             const theme = THEMES[currentThemeKey];
 
-            // ファンファーレ＆テーマカラーの紙吹雪演出
             playFanfareSound();
             if (typeof confetti === 'function') {
                 confetti({
@@ -1302,7 +1378,6 @@
                 });
             }
 
-            // テーマに合わせた当選モーダル演出をセット
             document.getElementById("winnerThemeBadge").textContent = theme.icon;
             document.getElementById("winnerSubtitle").textContent = theme.winnerSub;
             document.getElementById("winnerNameDisplay").textContent = winner.name;
@@ -1315,7 +1390,7 @@
         }
 
         // ==========================================
-        // 8. タイマー機能ロジック
+        // 8. タイマー機能ロジック（1分刻み ＆ 柔らかいオルゴール風音色）
         // ==========================================
         function formatTime(sec) {
             const m = Math.floor(sec / 60);
@@ -1334,27 +1409,39 @@
             ring.style.strokeDashoffset = circumference * (1 - ratio);
 
             if (timerRemainingSeconds <= 10 && timerRemainingSeconds > 0 && isTimerRunning) {
-                display.classList.add("text-red-500");
+                display.classList.add("text-amber-500");
             } else {
-                display.classList.remove("text-red-500");
+                display.classList.remove("text-amber-500");
             }
         }
 
-        function playTimerBeep(isFinish = false) {
+        // 警報音ではなく、柔らかいオルゴール／木琴風の優しい音色
+        function playGentleTimerChime(isFinish = false) {
             if (!soundEnabled) return;
             if (typeof Tone !== 'undefined' && Tone.context.state !== 'running') {
                 Tone.start();
             }
             try {
-                const synth = new Tone.Synth().toDestination();
+                const softSynth = new Tone.PolySynth(Tone.Synth, {
+                    oscillator: { type: "sine" },
+                    envelope: {
+                        attack: 0.04,
+                        decay: 0.4,
+                        sustain: 0.1,
+                        release: 1.2
+                    }
+                }).toDestination();
+                softSynth.volume.value = -8;
+
                 if (isFinish) {
+                    // 終了時：ゆったり温かい和音のチャイム（ド・ミ・ソ・シ・ド）
                     const now = Tone.now();
-                    synth.triggerAttackRelease("C5", "8n", now);
-                    synth.triggerAttackRelease("E5", "8n", now + 0.15);
-                    synth.triggerAttackRelease("G5", "8n", now + 0.3);
-                    synth.triggerAttackRelease("C6", "2n", now + 0.45);
+                    softSynth.triggerAttackRelease(["C4", "E4"], "4n", now);
+                    softSynth.triggerAttackRelease(["G4", "B4"], "4n", now + 0.28);
+                    softSynth.triggerAttackRelease(["C5", "E5", "G5"], "2n", now + 0.56);
                 } else {
-                    synth.triggerAttackRelease("A5", "32n");
+                    // 残り3・2・1秒：やさしい「ポーン」という単音
+                    softSynth.triggerAttackRelease("G4", "8n");
                 }
             } catch (e) {}
         }
@@ -1387,7 +1474,7 @@
                     updateTimerUI();
 
                     if (timerRemainingSeconds <= 3 && timerRemainingSeconds > 0) {
-                        playTimerBeep(false);
+                        playGentleTimerChime(false);
                     }
 
                     if (timerRemainingSeconds <= 0) {
@@ -1395,8 +1482,8 @@
                         isTimerRunning = false;
                         btnText.textContent = "スタート";
                         btnIcon.textContent = "▶️";
-                        statusBadge.textContent = "⏰ タイムアップ！";
-                        playTimerBeep(true);
+                        statusBadge.textContent = "✨ 時間になりました！";
+                        playGentleTimerChime(true);
                         if (typeof confetti === 'function') {
                             confetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } });
                         }
@@ -1417,7 +1504,7 @@
         }
 
         // ==========================================
-        // 9. スライド名簿ドロワー開閉ロジック
+        // 9. スライド名簿ドロワー開閉＆回り方設定保存
         // ==========================================
         function setDrawerState(open) {
             isDrawerOpen = open;
@@ -1437,6 +1524,41 @@
                 headerIcon.textContent = "➕";
                 sideIcon.textContent = "➕";
             }
+        }
+
+        function updateSpinSettingsUI() {
+            const curveLabels = {
+                standard: "標準回転",
+                suspense: "じわじわ粘り",
+                feint: "フェイント再加速",
+                turbo: "超高速スタート"
+            };
+            const badge = document.getElementById("currentSpinStyleBadge");
+            if (badge) {
+                badge.textContent = `⚙️ ${curveLabels[spinCurveType] || "標準回転"}`;
+            }
+            try {
+                window["local" + "Storage"].setItem("classroom_roulette_spin_prefs", JSON.stringify({
+                    curve: spinCurveType,
+                    speed: spinSpeedType
+                }));
+            } catch (e) {}
+        }
+
+        function loadSpinSettings() {
+            try {
+                const raw = window["local" + "Storage"].getItem("classroom_roulette_spin_prefs");
+                if (raw) {
+                    const prefs = JSON.parse(raw);
+                    if (prefs.curve) spinCurveType = prefs.curve;
+                    if (prefs.speed) spinSpeedType = prefs.speed;
+                }
+            } catch (e) {}
+            const curveSelect = document.getElementById("spinCurveSelect");
+            const speedSelect = document.getElementById("spinSpeedSelect");
+            if (curveSelect) curveSelect.value = spinCurveType;
+            if (speedSelect) speedSelect.value = spinSpeedType;
+            updateSpinSettingsUI();
         }
 
         // ==========================================
@@ -1459,11 +1581,9 @@
             document.getElementById("appTitle").textContent = theme.title;
             document.getElementById("bgWatermark").textContent = theme.watermark;
 
-            // テーマごとの当たり針（ポインター）を反映
             const pointerEl = document.getElementById("roulettePointer");
             pointerEl.innerHTML = POINTER_SVGS[theme.pointerType] || POINTER_SVGS.default;
 
-            // テーマごとの背景イラストを反映
             const bgIllustEl = document.getElementById("themeBgIllustration");
             bgIllustEl.innerHTML = BG_ILLUSTRATIONS[theme.bgIllust] || BG_ILLUSTRATIONS.pop;
 
@@ -1705,6 +1825,7 @@
                 applyTheme(e.target.value);
             });
 
+            loadSpinSettings();
             updateSavedRostersDropdown();
             setRosterFromNames(currentRosterTitle, savedRosters[currentRosterTitle]);
             applyTheme("pop");
@@ -1714,6 +1835,16 @@
 
             window.addEventListener("resize", resizeCanvas);
             resizeCanvas();
+
+            // 回り方設定の変更イベント
+            document.getElementById("spinCurveSelect").addEventListener("change", (e) => {
+                spinCurveType = e.target.value;
+                updateSpinSettingsUI();
+            });
+            document.getElementById("spinSpeedSelect").addEventListener("change", (e) => {
+                spinSpeedType = e.target.value;
+                updateSpinSettingsUI();
+            });
 
             // スライドドロワー開閉イベント
             document.getElementById("toggleDrawerBtn").addEventListener("click", () => setDrawerState(!isDrawerOpen));
@@ -1908,9 +2039,23 @@
                 updateTimerUI();
             });
 
-            // タイマー操作イベント
+            // タイマー操作イベント（1分刻み ＆ 10秒刻み）
             document.getElementById("timerStartPauseBtn").addEventListener("click", toggleTimer);
             document.getElementById("timerResetBtn").addEventListener("click", () => setTimerSeconds(timerTotalSeconds));
+            document.getElementById("timerPlus1MinBtn").addEventListener("click", () => {
+                timerTotalSeconds += 60;
+                timerRemainingSeconds += 60;
+                updateTimerUI();
+            });
+            document.getElementById("timerMinus1MinBtn").addEventListener("click", () => {
+                if (timerRemainingSeconds > 60) {
+                    timerTotalSeconds = Math.max(60, timerTotalSeconds - 60);
+                    timerRemainingSeconds = Math.max(60, timerRemainingSeconds - 60);
+                    updateTimerUI();
+                } else {
+                    setTimerSeconds(60);
+                }
+            });
             document.getElementById("timerPlus10Btn").addEventListener("click", () => {
                 timerTotalSeconds += 10;
                 timerRemainingSeconds += 10;
