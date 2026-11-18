@@ -1,4 +1,85 @@
-<!-- ... existing code ... -->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>授業が盛り上がる！多機能ルーレット＆タイマー</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts（テーマに合わせて動的に切り替え） -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Hachi+Maru+Pop&family=Inter:wght@400;600;800;900&family=M+PLUS+Rounded+1c:wght@700;900&family=New+Tegomin&family=Orbitron:wght@700;900&family=Shippori+Mincho:wght@600;800&family=Yuji+Syuku&display=swap" rel="stylesheet">
+    <!-- Tone.js（効果音生成用） -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <!-- Canvas Confetti（当選時の紙吹雪演出） -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        :root {
+            --bg-primary: #fef08a;
+            --bg-secondary: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --accent-color: #ec4899;
+            --border-color: #f472b6;
+            --font-family: 'M PLUS Rounded 1c', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font-family);
+            transition: background-color 0.4s ease, color 0.4s ease;
+            overflow-x: hidden;
+        }
+
+        .theme-card {
+            background-color: var(--bg-secondary);
+            border-color: var(--border-color);
+            transition: background-color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+        }
+
+        /* カスタムスクロールバー */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 8px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.35);
+        }
+
+        /* 当選モーダルのポップアップアニメーション */
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            70% { transform: scale(1.06); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop-in {
+            animation: popIn 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        /* 針の揺れアニメーション */
+        @keyframes pointerTick {
+            0% { transform: translateX(-50%) rotate(0deg); }
+            50% { transform: translateX(-50%) rotate(-18deg); }
+            100% { transform: translateX(-50%) rotate(0deg); }
+        }
+        .pointer-tick {
+            animation: pointerTick 0.08s ease-out;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
     <!-- ヘッダー -->
     <header class="theme-card border-b px-4 py-3 shadow-sm sticky top-0 z-30">
         <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
@@ -21,7 +102,22 @@
 
             <div class="flex flex-wrap items-center gap-2 sm:gap-3">
                 <!-- テーマ選択ドロップダウン -->
-<!-- ... existing code ... -->
+                <div class="flex items-center gap-1.5 bg-black/5 dark:bg-white/10 px-3 py-1.5 rounded-xl border border-current/15">
+                    <label for="themeSelect" class="text-xs sm:text-sm font-bold whitespace-nowrap">🎨 テーマ:</label>
+                    <select id="themeSelect" class="bg-transparent text-xs sm:text-sm font-bold focus:outline-none cursor-pointer pr-1">
+                        <!-- JSで20テーマを自動生成 -->
+                    </select>
+                </div>
+
+                <!-- 効果音ON/OFFトグル -->
+                <button id="soundToggleBtn" class="px-3 py-1.5 rounded-xl font-bold text-xs sm:text-sm border border-current/20 flex items-center gap-1.5 hover:opacity-80 transition cursor-pointer" title="効果音の切り替え">
+                    <span id="soundIcon">🔊</span>
+                    <span id="soundLabel" class="hidden sm:inline">音あり</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
     <!-- メインコンテンツ -->
     <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
@@ -126,90 +222,731 @@
         </div>
 
         <!-- 右側：名簿管理・欠席者選択エリア (5カラム) -->
-<!-- ... existing code ... -->
-        // 永続化ストレージの初期化（クラウド環境 と GitHub Pages等のブラウザ保存 の両対応）
-        async function initCloudStorage() {
-            const badge = document.getElementById("cloudStatusBadge");
-            const LOCAL_STORAGE_KEY = "classroom_roulette_rosters_v1";
+        <div class="lg:col-span-5 flex flex-col gap-4 theme-card rounded-3xl p-4 sm:p-6 shadow-xl border">
+            
+            <!-- 保存済み名簿の呼び出し・保存 -->
+            <div class="flex flex-col gap-2 pb-4 border-b border-current/15">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-base sm:text-lg font-black flex items-center gap-1.5">
+                        <span>📚</span> クラス名簿の保存・呼出
+                    </h2>
+                    <span id="cloudStatusBadge" class="text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600">
+                        ⏳ 接続中...
+                    </span>
+                </div>
 
-            // GitHub Pagesなど外部ホスティング環境の場合はブラウザのローカルストレージを使用
-            if (typeof __firebase_config === 'undefined') {
-                try {
-                    const raw = window["local" + "Storage"].getItem(LOCAL_STORAGE_KEY);
-                    if (raw) {
-                        const parsed = JSON.parse(raw);
-                        savedRosters = { ...DEFAULT_ROSTERS, ...parsed };
-                        updateSavedRostersDropdown();
-                    }
-                    badge.textContent = "💾 ブラウザ保存ON";
-                    badge.className = "text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600";
-                } catch (e) {
-                    badge.textContent = "⚠️ 一時保存モード";
+                <div class="flex gap-2">
+                    <select id="savedRostersSelect" class="flex-1 px-3 py-2 rounded-xl text-sm font-bold border border-current/20 bg-transparent focus:outline-none cursor-pointer">
+                        <!-- 保存済みリスト -->
+                    </select>
+                    <button id="loadRosterBtn" class="px-3 py-2 rounded-xl text-xs sm:text-sm font-bold text-white shadow hover:brightness-110 transition cursor-pointer whitespace-nowrap" style="background-color: var(--accent-color);">
+                        読込
+                    </button>
+                    <button id="deleteRosterBtn" class="px-2.5 py-2 rounded-xl text-xs sm:text-sm font-bold border border-red-400/50 text-red-500 hover:bg-red-500/10 transition cursor-pointer" title="選択中の保存名簿を削除">
+                        🗑️
+                    </button>
+                </div>
+
+                <div class="flex gap-2 mt-1">
+                    <button id="openPasteModalBtn" class="flex-1 py-2.5 px-3 rounded-xl font-black text-xs sm:text-sm border-2 border-dashed border-current/30 hover:border-current/60 hover:bg-black/5 transition flex items-center justify-center gap-1.5 cursor-pointer">
+                        <span>📊</span> Excelからコピペで一括作成
+                    </button>
+                    <button id="saveCurrentRosterBtn" class="py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm border border-current/20 hover:bg-black/5 transition flex items-center gap-1 cursor-pointer whitespace-nowrap">
+                        <span>💾</span> 保存
+                    </button>
+                </div>
+            </div>
+
+            <!-- 欠席者チェック＆個別追加 -->
+            <div class="flex flex-col gap-2">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-sm sm:text-base font-black flex items-center gap-1.5">
+                        <span>🙋</span> 出席・欠席の切り替え
+                    </h3>
+                    <div class="flex gap-1.5">
+                        <button id="allPresentBtn" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/25 transition cursor-pointer">
+                            全員出席
+                        </button>
+                        <button id="allAbsentBtn" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-slate-500/15 hover:bg-slate-500/25 transition cursor-pointer">
+                            全員欠席
+                        </button>
+                    </div>
+                </div>
+                <p class="text-xs opacity-75">
+                    ※ 名前をクリックすると<strong>「欠席（ルーレットから除外）」</strong>になります。
+                </p>
+
+                <!-- 1名追加フォーム -->
+                <form id="addSingleForm" class="flex gap-2 mt-1">
+                    <input type="text" id="singleNameInput" placeholder="生徒名を追加..." class="flex-1 px-3 py-2 rounded-xl text-sm border border-current/20 bg-transparent focus:outline-none" required>
+                    <button type="submit" class="px-4 py-2 rounded-xl text-sm font-bold text-white shadow hover:brightness-110 transition cursor-pointer" style="background-color: var(--accent-color);">
+                        追加
+                    </button>
+                </form>
+
+                <!-- 生徒リスト（スクロール可能） -->
+                <div id="studentListContainer" class="mt-2 max-h-[340px] overflow-y-auto pr-1 grid grid-cols-2 sm:grid-cols-2 gap-2">
+                    <!-- JSで生徒カードをレンダリング -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Excelコピペ一括入力モーダル -->
+    <div id="pasteModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="theme-card w-full max-w-lg rounded-3xl p-6 shadow-2xl border-2 animate-pop-in">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-xl font-black flex items-center gap-2">
+                    <span>📊</span> Excelデータをそのまま貼り付け
+                </h3>
+                <button id="closePasteModalBtn" class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-black/10 font-bold cursor-pointer">✕</button>
+            </div>
+            
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold mb-1">クラス名（保存用の名前）</label>
+                    <input type="text" id="newRosterNameInput" placeholder="例：1年A組、2限目 英語など" class="w-full px-3 py-2 rounded-xl text-sm font-bold border border-current/25 bg-transparent focus:outline-none">
+                </div>
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block text-xs font-bold">Excelの名簿範囲をコピーして貼り付け（Ctrl+V / Cmd+V）</label>
+                    </div>
+                    <div class="text-[11px] opacity-80 bg-black/5 dark:bg-white/5 p-2.5 rounded-xl mb-2 leading-relaxed">
+                        💡 <strong>Excelからそのまま貼り付けOK！</strong><br>
+                        名前の列だけ選択しても、「出席番号＋名前＋ふりがな」の表ごと選択して貼り付けても、自動で名前だけを綺麗に抽出します。
+                    </div>
+                    <textarea id="pasteTextarea" rows="7" placeholder="ここにExcelのセルをそのまま貼り付けてください&#10;例：&#10;1	佐藤 健太	さとう けんた&#10;2	鈴木 陽菜	すずき はるな&#10;3	高橋 翔太	たかはし しょうた" class="w-full p-3 rounded-xl text-sm border border-current/25 bg-transparent focus:outline-none font-mono"></textarea>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 mt-5">
+                <button id="cancelPasteBtn" class="px-4 py-2.5 rounded-xl text-sm font-bold border border-current/20 hover:bg-black/5 cursor-pointer">
+                    キャンセル
+                </button>
+                <button id="applyPasteBtn" class="px-5 py-2.5 rounded-xl text-sm font-black text-white shadow-lg hover:brightness-110 cursor-pointer" style="background-color: var(--accent-color);">
+                    反映して保存する
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 当選発表モーダル -->
+    <div id="winnerModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="theme-card w-full max-w-md rounded-3xl p-6 sm:p-8 text-center shadow-2xl border-4 animate-pop-in relative overflow-hidden">
+            <div class="text-sm sm:text-base font-black tracking-widest uppercase mb-2 opacity-80" id="winnerSubtitle">
+                🎉 SELECTED! 🎉
+            </div>
+            <div class="my-6 py-6 px-4 rounded-2xl bg-black/5 dark:bg-white/10 border border-current/15">
+                <div id="winnerNameDisplay" class="text-3xl sm:text-5xl font-black break-words leading-tight">
+                    山田 太郎
+                </div>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-2.5 justify-center mt-6">
+                <button id="winnerCloseBtn" class="flex-1 py-3 px-4 rounded-2xl font-black text-base text-white shadow-lg hover:brightness-110 transition cursor-pointer" style="background-color: var(--accent-color);">
+                    OK（そのまま残す）
+                </button>
+                <button id="winnerExcludeBtn" class="py-3 px-4 rounded-2xl font-bold text-sm border-2 border-current/25 hover:bg-black/5 transition cursor-pointer" title="一度当たった人を今回のルーレットから外します">
+                    この人を外して次へ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 汎用メッセージ・確認モーダル（alert/confirm代替） -->
+    <div id="confirmModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="theme-card w-full max-w-sm rounded-3xl p-6 shadow-2xl border-2 animate-pop-in text-center">
+            <p id="confirmMessage" class="text-base font-bold mb-6"></p>
+            <div class="flex justify-center gap-3">
+                <button id="confirmCancelBtn" class="px-4 py-2 rounded-xl text-sm font-bold border border-current/20 hover:bg-black/5 cursor-pointer">
+                    キャンセル
+                </button>
+                <button id="confirmOkBtn" class="px-5 py-2 rounded-xl text-sm font-black text-white bg-red-500 hover:bg-red-600 cursor-pointer">
+                    削除する
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- トースト通知 -->
+    <div id="toastNotification" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+        <div class="bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-xl text-sm font-bold flex items-center gap-2">
+            <span id="toastIcon">✅</span>
+            <span id="toastText">保存しました</span>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // ==========================================
+        // 1. 20種類のテーマ定義（配色・フォント・効果音・演出）
+        // ==========================================
+        const THEMES = {
+            pop: {
+                name: "1. POP（元気いっぱい）",
+                icon: "🎉",
+                title: "ミラクル・ルーレット",
+                watermark: "POP! POP!",
+                bgPrimary: "#fef08a",
+                bgSecondary: "#ffffff",
+                textPrimary: "#1e293b",
+                accent: "#ec4899",
+                border: "#f472b6",
+                font: "'M PLUS Rounded 1c', sans-serif",
+                slices: ["#ff595e", "#ffca3a", "#8ac926", "#1982c4", "#6a4c93", "#ff924c"],
+                sliceText: "#ffffff",
+                soundType: "pop",
+                winnerSub: "🎉 おめでとう！大当たり！ 🎉"
+            },
+            rock: {
+                name: "2. Rock（ライブ会場風）",
+                icon: "🎸",
+                title: "ROCK'N ROLL ROULETTE",
+                watermark: "YEAH!! ROCK!!",
+                bgPrimary: "#18181b",
+                bgSecondary: "#27272a",
+                textPrimary: "#f4f4f5",
+                accent: "#ef4444",
+                border: "#dc2626",
+                font: "'Orbitron', 'Inter', sans-serif",
+                slices: ["#dc2626", "#18181b", "#eab308", "#3f3f46", "#b91c1c", "#52525b"],
+                sliceText: "#ffffff",
+                soundType: "rock",
+                winnerSub: "🔥 SHOUT IT OUT!! 🔥"
+            },
+            kobun: {
+                name: "3. 古文・平安絵巻風",
+                icon: "📜",
+                title: "いとをかし抽選盤",
+                watermark: "あはれなり",
+                bgPrimary: "#f5ebd6",
+                bgSecondary: "#fcf8f0",
+                textPrimary: "#3e2723",
+                accent: "#8d4024",
+                border: "#b8860b",
+                font: "'Shippori Mincho', serif",
+                slices: ["#8d4024", "#556b2f", "#483d8b", "#b8860b", "#8b0000", "#2f4f4f"],
+                sliceText: "#fcf8f0",
+                soundType: "wa",
+                winnerSub: "🌸 いみじうめでたし！ 🌸"
+            },
+            christmas: {
+                name: "4. クリスマス（聖夜）",
+                icon: "🎄",
+                title: "聖夜のサンタ・ルーレット",
+                watermark: "MERRY XMAS",
+                bgPrimary: "#064e3b",
+                bgSecondary: "#fef2f2",
+                textPrimary: "#7f1d1d",
+                accent: "#dc2626",
+                border: "#eab308",
+                font: "'M PLUS Rounded 1c', sans-serif",
+                slices: ["#dc2626", "#15803d", "#eab308", "#b91c1c", "#166534", "#d97706"],
+                sliceText: "#ffffff",
+                soundType: "bell",
+                winnerSub: "🎅 メリークリスマス！ 🎁"
+            },
+            newyear: {
+                name: "5. お正月（新春・紅白）",
+                icon: "🎍",
+                title: "新春・初夢おみくじ盤",
+                watermark: "謹賀新年",
+                bgPrimary: "#fff1f2",
+                bgSecondary: "#ffffff",
+                textPrimary: "#881337",
+                accent: "#e11d48",
+                border: "#f59e0b",
+                font: "'Yuji Syuku', serif",
+                slices: ["#e11d48", "#ffffff", "#f59e0b", "#be123c", "#fef3c7", "#d97706"],
+                sliceText: "#1e293b",
+                soundType: "wa",
+                winnerSub: "🌅 大吉！あっぱれ！ 🎍"
+            },
+            dark: {
+                name: "6. ダーク（ミッドナイト）",
+                icon: "🌙",
+                title: "MIDNIGHT WHEEL",
+                watermark: "DARKNESS",
+                bgPrimary: "#090d16",
+                bgSecondary: "#131b2e",
+                textPrimary: "#e2e8f0",
+                accent: "#6366f1",
+                border: "#334155",
+                font: "'Inter', sans-serif",
+                slices: ["#1e293b", "#312e81", "#0f172a", "#3730a3", "#1e1b4b", "#334155"],
+                sliceText: "#e2e8f0",
+                soundType: "pop",
+                winnerSub: "✨ CHOSEN ONE ✨"
+            },
+            cyberpunk: {
+                name: "7. サイバーパンク（電脳）",
+                icon: "🤖",
+                title: "CYBER-NET 2099",
+                watermark: "SYSTEM HACK",
+                bgPrimary: "#050510",
+                bgSecondary: "#120b29",
+                textPrimary: "#00ffcc",
+                accent: "#ff007f",
+                border: "#00ffcc",
+                font: "'Orbitron', sans-serif",
+                slices: ["#ff007f", "#00b8ff", "#7000ff", "#00ffcc", "#ff0055", "#2b00ff"],
+                sliceText: "#ffffff",
+                soundType: "retro",
+                winnerSub: "⚡ TARGET LOCKED ⚡"
+            },
+            retrogame: {
+                name: "8. レトロゲーム（8bit風）",
+                icon: "👾",
+                title: "8-BIT QUEST ROULETTE",
+                watermark: "LEVEL UP!",
+                bgPrimary: "#1d2b53",
+                bgSecondary: "#000000",
+                textPrimary: "#fff1e8",
+                accent: "#ff004d",
+                border: "#29adff",
+                font: "'DotGothic16', sans-serif",
+                slices: ["#ff004d", "#00e436", "#29adff", "#ffec27", "#ff77a8", "#ffa300"],
+                sliceText: "#000000",
+                soundType: "retro",
+                winnerSub: "🍄 1UP!! ゆうしゃに えらばれた！ 🍄"
+            },
+            blackboard: {
+                name: "9. 学校の黒板（チョーク風）",
+                icon: "🏫",
+                title: "今日の当番・発表ルーレット",
+                watermark: "日直・学級会",
+                bgPrimary: "#1b4332",
+                bgSecondary: "#245540",
+                textPrimary: "#f8f9fa",
+                accent: "#f4a261",
+                border: "#d4a373",
+                font: "'Hachi Maru Pop', cursive",
+                slices: ["#e76f51", "#2a9d8f", "#e9c46a", "#f4a261", "#457b9d", "#a8dadc"],
+                sliceText: "#ffffff",
+                soundType: "pop",
+                winnerSub: "✏️ よろしくおねがいします！ ✏️"
+            },
+            sakura: {
+                name: "10. 春・満開の桜",
+                icon: "🌸",
+                title: "さくら咲くルーレット",
+                watermark: "春爛漫",
+                bgPrimary: "#ffe4e6",
+                bgSecondary: "#fff1f2",
+                textPrimary: "#881337",
+                accent: "#f43f5e",
+                border: "#fda4af",
+                font: "'M PLUS Rounded 1c', sans-serif",
+                slices: ["#fb7185", "#fda4af", "#f43f5e", "#fecdd3", "#e11d48", "#fbcfe8"],
+                sliceText: "#881337",
+                soundType: "bell",
+                winnerSub: "🌸 満開！おめでとう！ 🌸"
+            },
+            ocean: {
+                name: "11. 南国の海（マリン）",
+                icon: "🐬",
+                title: "オーシャン・スプラッシュ",
+                watermark: "ALOHA!",
+                bgPrimary: "#e0f2fe",
+                bgSecondary: "#ffffff",
+                textPrimary: "#0369a1",
+                accent: "#0284c7",
+                border: "#38bdf8",
+                font: "'M PLUS Rounded 1c', sans-serif",
+                slices: ["#0284c7", "#06b6d4", "#38bdf8", "#0d9488", "#2563eb", "#22d3ee"],
+                sliceText: "#ffffff",
+                soundType: "pop",
+                winnerSub: "🌊 ナイスウェーブ！ 🐠"
+            },
+            halloween: {
+                name: "12. ハロウィン（おばけ）",
+                icon: "🎃",
+                title: "HALLOWEEN NIGHT",
+                watermark: "TRICK OR TREAT",
+                bgPrimary: "#2e1065",
+                bgSecondary: "#1e1b4b",
+                textPrimary: "#fdba74",
+                accent: "#f97316",
+                border: "#a855f7",
+                font: "'Hachi Maru Pop', cursive",
+                slices: ["#f97316", "#7e22ce", "#ea580c", "#581c87", "#eab308", "#4c1d95"],
+                sliceText: "#ffffff",
+                soundType: "retro",
+                winnerSub: "👻 トリック・オア・トリート！ 🎃"
+            },
+            space: {
+                name: "13. 宇宙・ギャラクシー",
+                icon: "🚀",
+                title: "COSMIC GALAXY WHEEL",
+                watermark: "UNIVERSE",
+                bgPrimary: "#0f172a",
+                bgSecondary: "#1e1b4b",
+                textPrimary: "#e0e7ff",
+                accent: "#8b5cf6",
+                border: "#6366f1",
+                font: "'Orbitron', sans-serif",
+                slices: ["#4f46e5", "#7c3aed", "#2563eb", "#9333ea", "#0284c7", "#6d28d9"],
+                sliceText: "#ffffff",
+                soundType: "bell",
+                winnerSub: "🌟 新星発見！ 🌟"
+            },
+            sengoku: {
+                name: "14. 戦国武将・合戦風",
+                icon: "⚔️",
+                title: "天下分け目の出陣盤",
+                watermark: "いざ出陣",
+                bgPrimary: "#292524",
+                bgSecondary: "#1c1917",
+                textPrimary: "#fde047",
+                accent: "#dc2626",
+                border: "#ca8a04",
+                font: "'Yuji Syuku', serif",
+                slices: ["#991b1b", "#1e3a8a", "#854d0e", "#14532d", "#7f1d1d", "#374151"],
+                sliceText: "#fef08a",
+                soundType: "wa",
+                winnerSub: "🔥 一番槍！いざ参らん！ 🔥"
+            },
+            cafe: {
+                name: "15. おしゃれカフェ（ラテ）",
+                icon: "☕",
+                title: "Cafe Latte Roulette",
+                watermark: "COFFEE BREAK",
+                bgPrimary: "#ede0d4",
+                bgSecondary: "#fffcf9",
+                textPrimary: "#432818",
+                accent: "#9c6644",
+                border: "#ddb892",
+                font: "'Shippori Mincho', serif",
+                slices: ["#7f5539", "#9c6644", "#b08968", "#ddb892", "#6f4518", "#a47148"],
+                sliceText: "#ffffff",
+                soundType: "bell",
+                winnerSub: "🥐 素敵なひとときを！ ☕"
+            },
+            pastel: {
+                name: "16. ゆめかわパステル",
+                icon: "🦄",
+                title: "ゆめかわ★ドリーム盤",
+                watermark: "KAWAII!",
+                bgPrimary: "#fae8ff",
+                bgSecondary: "#ffffff",
+                textPrimary: "#86198f",
+                accent: "#d946ef",
+                border: "#f0abfc",
+                font: "'Hachi Maru Pop', cursive",
+                slices: ["#f9a8d4", "#c4b5fd", "#93c5fd", "#6ee7b7", "#fde047", "#fdba74"],
+                sliceText: "#581c87",
+                soundType: "bell",
+                winnerSub: "✨ キラキラ大当選！ ✨"
+            },
+            forest: {
+                name: "17. 深い森・ネイチャー",
+                icon: "🌲",
+                title: "フォレスト・アドベンチャー",
+                watermark: "NATURE",
+                bgPrimary: "#dcfce7",
+                bgSecondary: "#f0fdf4",
+                textPrimary: "#14532d",
+                accent: "#16a34a",
+                border: "#86efac",
+                font: "'M PLUS Rounded 1c', sans-serif",
+                slices: ["#15803d", "#22c55e", "#65a30d", "#0d9488", "#166534", "#4d7c0f"],
+                sliceText: "#ffffff",
+                soundType: "pop",
+                winnerSub: "🍀 ラッキークローバー！ 🍀"
+            },
+            newspaper: {
+                name: "18. 昭和レトロ・新聞号外風",
+                icon: "📰",
+                title: "号外！運命の抽選瓦版",
+                watermark: "号外・速報",
+                bgPrimary: "#e5e5e5",
+                bgSecondary: "#fafafa",
+                textPrimary: "#171717",
+                accent: "#b91c1c",
+                border: "#404040",
+                font: "'New Tegomin', serif",
+                slices: ["#404040", "#737373", "#a3a3a3", "#525252", "#262626", "#8c8c8c"],
+                sliceText: "#ffffff",
+                soundType: "wa",
+                winnerSub: "📣 号外！決定いたしました！ 📣"
+            },
+            gold: {
+                name: "19. ゴージャス・黄金カジノ",
+                icon: "👑",
+                title: "ROYAL GOLD JACKPOT",
+                watermark: "JACKPOT",
+                bgPrimary: "#1c1917",
+                bgSecondary: "#292524",
+                textPrimary: "#fef08a",
+                accent: "#eab308",
+                border: "#facc15",
+                font: "'Orbitron', serif",
+                slices: ["#eab308", "#b91c1c", "#171717", "#ca8a04", "#991b1b", "#262626"],
+                sliceText: "#ffffff",
+                soundType: "rock",
+                winnerSub: "👑 JACKPOT!! 素晴らしい！ 👑"
+            },
+            sport: {
+                name: "20. 体育祭・熱血応援団",
+                icon: "🔥",
+                title: "燃えろ！全力ルーレット",
+                watermark: "必勝・全力",
+                bgPrimary: "#ffedd5",
+                bgSecondary: "#ffffff",
+                textPrimary: "#9a3412",
+                accent: "#ea580c",
+                border: "#fb923c",
+                font: "'M PLUS Rounded 1c', sans-serif",
+                slices: ["#ea580c", "#dc2626", "#2563eb", "#eab308", "#16a34a", "#f97316"],
+                sliceText: "#ffffff",
+                soundType: "rock",
+                winnerSub: "🏅 ファイト一発！君に決めた！ 🏅"
+            }
+        };
+
+        // ==========================================
+        // 2. アプリ状態管理 & デフォルトデータ
+        // ==========================================
+        const DEFAULT_ROSTERS = {
+            "サンプル名簿（1年1組）": [
+                "佐藤 健太", "鈴木 陽菜", "高橋 翔太", "田中 美咲", "伊藤 陸",
+                "渡辺 結衣", "山本 蓮", "中村 葵", "小林 湊", "加藤 凛"
+            ],
+            "班分けサンプル（A〜F班）": [
+                "1班（ライオン）", "2班（ペンギン）", "3班（イルカ）",
+                "4班（パンダ）", "5班（コアラ）", "6班（ウサギ）"
+            ]
+        };
+
+        let currentThemeKey = "pop";
+        let soundEnabled = true;
+        let isSpinning = false;
+        let currentAngle = 0; // ラジアン
+        let currentRosterTitle = "サンプル名簿（1年1組）";
+        let students = []; // { id, name, absent }
+        let savedRosters = { ...DEFAULT_ROSTERS };
+        let lastWinnerStudent = null;
+
+        // タイマー関連の状態
+        let timerTotalSeconds = 180; // デフォルト3分
+        let timerRemainingSeconds = 180;
+        let timerInterval = null;
+        let isTimerRunning = false;
+
+        // Firestore関連の状態
+        let db = null;
+        let auth = null;
+        let currentUser = null;
+        let rosterDocIdMap = {}; // { rosterTitle: firestoreDocId }
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'classroom-roulette-app';
+
+        // DOM要素
+        const canvas = document.getElementById("rouletteCanvas");
+        const ctx = canvas.getContext("2d");
+
+        // ==========================================
+        // 3. サウンドエンジン（Tone.js使用・外部URL不要）
+        // ==========================================
+        let tickSynth = null;
+
+        function initAudio() {
+            if (!tickSynth && typeof Tone !== 'undefined') {
+                tickSynth = new Tone.MembraneSynth({
+                    pitchDecay: 0.01,
+                    octaves: 2,
+                    oscillator: { type: "sine" },
+                    envelope: { attack: 0.001, decay: 0.05, sustain: 0, release: 0.01 }
+                }).toDestination();
+                tickSynth.volume.value = -8;
+            }
+        }
+
+        // ピンを弾く音（回転中）
+        function playTickSound() {
+            if (!soundEnabled) return;
+            try {
+                initAudio();
+                const theme = THEMES[currentThemeKey];
+                if (theme.soundType === "wa") {
+                    // 木魚・鼓風のポクッという音
+                    tickSynth.triggerAttackRelease("G3", "32n");
+                } else if (theme.soundType === "retro") {
+                    tickSynth.triggerAttackRelease("C5", "64n");
+                } else if (theme.soundType === "rock") {
+                    tickSynth.triggerAttackRelease("E2", "32n");
+                } else {
+                    tickSynth.triggerAttackRelease("C4", "32n");
                 }
-                return;
-            }
-
-            try {
-                const firebaseConfig = JSON.parse(__firebase_config);
-                const app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-// ... existing code ... -->
-        // 名簿を保存するヘルパー関数（クラウド＆ブラウザ両対応）
-        async function persistRosterToCloud(title, namesList) {
-            const LOCAL_STORAGE_KEY = "classroom_roulette_rosters_v1";
-            if (!db || !currentUser) {
-                try {
-                    const customOnly = {};
-                    Object.keys(savedRosters).forEach(k => {
-                        if (!DEFAULT_ROSTERS[k]) customOnly[k] = savedRosters[k];
-                    });
-                    customOnly[title] = namesList;
-                    window["local" + "Storage"].setItem(LOCAL_STORAGE_KEY, JSON.stringify(customOnly));
-                } catch (e) {}
-                return;
-            }
-            try {
-                // ドキュメントIDとして使える安全な文字列を生成（または既存のIDを再利用）
-                const docId = rosterDocIdMap[title] || `roster_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-                const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'rosters', docId);
-                await setDoc(docRef, {
-                    title: title,
-                    names: namesList,
-                    updatedAt: Date.now()
-                });
-                rosterDocIdMap[title] = docId;
             } catch (e) {
-                console.error("Failed to save roster:", e);
+                // 自動再生制限などで鳴らない場合は無視
             }
         }
 
-        // 名簿を削除するヘルパー関数（クラウド＆ブラウザ両対応）
-        async function deleteRosterFromCloud(title) {
-            const LOCAL_STORAGE_KEY = "classroom_roulette_rosters_v1";
-            if (!db || !currentUser) {
-                try {
-                    const customOnly = {};
-                    Object.keys(savedRosters).forEach(k => {
-                        if (!DEFAULT_ROSTERS[k] && k !== title) customOnly[k] = savedRosters[k];
-                    });
-                    window["local" + "Storage"].setItem(LOCAL_STORAGE_KEY, JSON.stringify(customOnly));
-                } catch (e) {}
-                return;
-            }
-            const docId = rosterDocIdMap[title];
-            if (!docId) return;
+        // 当選ファンファーレ音
+        function playFanfareSound() {
+            if (!soundEnabled) return;
             try {
-                const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'rosters', docId);
-                await deleteDoc(docRef);
-                delete rosterDocIdMap[title];
+                const theme = THEMES[currentThemeKey];
+                const synth = new Tone.PolySynth(Tone.Synth).toDestination();
+                synth.volume.value = -4;
+                const now = Tone.now();
+
+                if (theme.soundType === "wa") {
+                    // 和風・雅楽風のファンファーレ（平調子）
+                    synth.triggerAttackRelease(["E4", "B4"], "8n", now);
+                    synth.triggerAttackRelease(["F#4", "C#5"], "8n", now + 0.15);
+                    synth.triggerAttackRelease(["A4", "E5"], "8n", now + 0.3);
+                    synth.triggerAttackRelease(["B4", "F#5", "B5"], "2n", now + 0.45);
+                } else if (theme.soundType === "rock") {
+                    // パワーコード風ファンファーレ
+                    synth.triggerAttackRelease(["E3", "B3", "E4"], "8n", now);
+                    synth.triggerAttackRelease(["G3", "D4", "G4"], "8n", now + 0.15);
+                    synth.triggerAttackRelease(["A3", "E4", "A4"], "8n", now + 0.3);
+                    synth.triggerAttackRelease(["B3", "F#4", "B4"], "2n", now + 0.45);
+                } else if (theme.soundType === "bell") {
+                    // クリスマス・キラキラベル風
+                    synth.triggerAttackRelease(["C5", "E5"], "8n", now);
+                    synth.triggerAttackRelease(["G5"], "8n", now + 0.12);
+                    synth.triggerAttackRelease(["E5"], "8n", now + 0.24);
+                    synth.triggerAttackRelease(["G5", "C6"], "2n", now + 0.36);
+                } else if (theme.soundType === "retro") {
+                    // レトロゲーム・レベルアップ音
+                    const notes = ["C5", "E5", "G5", "C6", "G5", "C6"];
+                    notes.forEach((note, idx) => {
+                        synth.triggerAttackRelease(note, "16n", now + idx * 0.1);
+                    });
+                } else {
+                    // 定番の明るいPOPファンファーレ
+                    synth.triggerAttackRelease(["C4", "E4", "G4"], "8n", now);
+                    synth.triggerAttackRelease(["C4", "E4", "G4"], "16n", now + 0.18);
+                    synth.triggerAttackRelease(["D4", "F#4", "A4"], "8n", now + 0.3);
+                    synth.triggerAttackRelease(["G4", "B4", "D5", "G5"], "2n", now + 0.48);
+                }
             } catch (e) {
-                console.error("Failed to delete roster:", e);
+                console.warn("Audio playback skipped:", e);
             }
         }
 
-        /**
-         * ルーレットを回転させる
-         */
+        // ==========================================
+        // 4. ルーレット描画（HTML5 Canvas）
+        // ==========================================
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            if (!container) return;
+            const size = container.clientWidth;
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = size * dpr;
+            canvas.height = size * dpr;
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            drawRoulette();
+        }
+
+        function drawRoulette() {
+            const size = canvas.width / (window.devicePixelRatio || 1);
+            const center = size / 2;
+            const radius = center - 8;
+
+            ctx.clearRect(0, 0, size, size);
+
+            const activeStudents = students.filter(s => !s.absent);
+            const theme = THEMES[currentThemeKey];
+
+            // 参加者が0人の場合
+            if (activeStudents.length === 0) {
+                ctx.beginPath();
+                ctx.arc(center, center, radius, 0, Math.PI * 2);
+                ctx.fillStyle = "rgba(128, 128, 128, 0.2)";
+                ctx.fill();
+                ctx.lineWidth = 4;
+                ctx.strokeStyle = theme.border;
+                ctx.stroke();
+
+                ctx.fillStyle = theme.textPrimary;
+                ctx.font = `bold 18px ${theme.font}`;
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText("出席者がいません", center, center - 60);
+                return;
+            }
+
+            const sliceAngle = (Math.PI * 2) / activeStudents.length;
+
+            // 各扇形を描画
+            activeStudents.forEach((student, i) => {
+                const startAngle = currentAngle + i * sliceAngle;
+                const endAngle = startAngle + sliceAngle;
+
+                ctx.beginPath();
+                ctx.moveTo(center, center);
+                ctx.arc(center, center, radius, startAngle, endAngle);
+                ctx.closePath();
+
+                // 隣り合う色が同じにならないよう調整
+                let colorIndex = i % theme.slices.length;
+                if (i === activeStudents.length - 1 && colorIndex === 0 && theme.slices.length > 1) {
+                    colorIndex = 1;
+                }
+                ctx.fillStyle = theme.slices[colorIndex];
+                ctx.fill();
+
+                // 境界線
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = "rgba(255, 255, 255, 0.65)";
+                ctx.stroke();
+
+                // テキスト描画（扇形の中心線に沿って配置）
+                ctx.save();
+                ctx.translate(center, center);
+                ctx.rotate(startAngle + sliceAngle / 2);
+
+                // 人数に応じてフォントサイズを自動調整
+                const fontSize = Math.max(11, Math.min(22, Math.floor((radius * 1.1) / activeStudents.length)));
+                ctx.font = `900 ${fontSize}px ${theme.font}`;
+                ctx.fillStyle = theme.sliceText;
+                ctx.textAlign = "right";
+                ctx.textBaseline = "middle";
+
+                // 文字が長すぎる場合は省略
+                let displayName = student.name;
+                if (displayName.length > 10) {
+                    displayName = displayName.substring(0, 9) + "…";
+                }
+
+                // 縁取りで視認性アップ
+                ctx.shadowColor = "rgba(0,0,0,0.45)";
+                ctx.shadowBlur = 4;
+                ctx.fillText(displayName, radius - 22, 0);
+                ctx.restore();
+            });
+
+            // 外周の飾りリングとピン
+            ctx.beginPath();
+            ctx.arc(center, center, radius, 0, Math.PI * 2);
+            ctx.lineWidth = 6;
+            ctx.strokeStyle = "#ffffff";
+            ctx.stroke();
+
+            // 各境界に小さなピン（釘）を描画
+            activeStudents.forEach((_, i) => {
+                const pinAngle = currentAngle + i * sliceAngle;
+                const px = center + Math.cos(pinAngle) * (radius - 4);
+                const py = center + Math.sin(pinAngle) * (radius - 4);
+
+                ctx.beginPath();
+                ctx.arc(px, py, 3.5, 0, Math.PI * 2);
+                ctx.fillStyle = "#ffffff";
+                ctx.fill();
+                ctx.strokeStyle = "rgba(0,0,0,0.3)";
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            });
+        }
+
+        // ==========================================
+        // 5. ルーレット回転＆当選判定ロジック
+        // ==========================================
         function spinRoulette() {
             const activeStudents = students.filter(s => !s.absent);
             if (isSpinning) return;
@@ -280,6 +1017,48 @@
             }
 
             requestAnimationFrame(animate);
+        }
+
+        function announceWinner(activeStudents) {
+            // 上部中央の針の位置はキャンバス座標系で -Math.PI / 2 (270度)
+            const pointerAngle = -Math.PI / 2;
+            const sliceAngle = (Math.PI * 2) / activeStudents.length;
+
+            // currentAngle分だけ回転しているので、針の相対角度を計算
+            let relativeAngle = (pointerAngle - currentAngle) % (Math.PI * 2);
+            if (relativeAngle < 0) relativeAngle += Math.PI * 2;
+
+            const winningIndex = Math.floor(relativeAngle / sliceAngle) % activeStudents.length;
+            const winner = activeStudents[winningIndex];
+            lastWinnerStudent = winner;
+
+            // ファンファーレ＆紙吹雪
+            playFanfareSound();
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 100,
+                    spread: 75,
+                    origin: { y: 0.55 }
+                });
+            }
+
+            // モーダル表示
+            const theme = THEMES[currentThemeKey];
+            document.getElementById("winnerSubtitle").textContent = theme.winnerSub;
+            document.getElementById("winnerNameDisplay").textContent = winner.name;
+
+            const modal = document.getElementById("winnerModal");
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+        }
+
+        // ==========================================
+        // 6. タイマー機能ロジック
+        // ==========================================
+        function formatTime(sec) {
+            const m = Math.floor(sec / 60);
+            const s = sec % 60;
+            return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
         }
 
         function updateTimerUI() {
@@ -375,13 +1154,450 @@
             updateTimerUI();
         }
 
-        /**
-         * テーマを画面全体に適用する
-         */
-// ... existing code ... -->
+        // ==========================================
+        // 7. テーマ切り替え・UI更新・保存ストレージ管理
+        // ==========================================
+        function applyTheme(themeKey) {
+            const theme = THEMES[themeKey];
+            if (!theme) return;
+            currentThemeKey = themeKey;
+
+            const root = document.documentElement;
+            root.style.setProperty("--bg-primary", theme.bgPrimary);
+            root.style.setProperty("--bg-secondary", theme.bgSecondary);
+            root.style.setProperty("--text-primary", theme.textPrimary);
+            root.style.setProperty("--accent-color", theme.accent);
+            root.style.setProperty("--border-color", theme.border);
+            root.style.setProperty("--font-family", theme.font);
+
+            document.getElementById("themeIcon").textContent = theme.icon;
+            document.getElementById("appTitle").textContent = theme.title;
+            document.getElementById("bgWatermark").textContent = theme.watermark;
+
+            drawRoulette();
+        }
+
+        function setRosterFromNames(title, nameArray) {
+            currentRosterTitle = title;
+            document.getElementById("currentClassNameDisplay").textContent = title;
+            students = nameArray.map((name, idx) => ({
+                id: `${Date.now()}_${idx}`,
+                name: name.trim(),
+                absent: false
+            }));
+            renderStudentList();
+            drawRoulette();
+        }
+
+        function renderStudentList() {
+            const container = document.getElementById("studentListContainer");
+            container.innerHTML = "";
+
+            const activeCount = students.filter(s => !s.absent).length;
+            document.getElementById("activeCountDisplay").textContent = activeCount;
+            document.getElementById("totalCountDisplay").textContent = students.length;
+
+            students.forEach((student) => {
+                const card = document.createElement("div");
+                card.className = `flex items-center justify-between px-3 py-2 rounded-xl border text-xs sm:text-sm font-bold cursor-pointer select-none transition ${
+                    student.absent
+                        ? "opacity-40 line-through bg-black/5 border-transparent"
+                        : "bg-white/60 dark:bg-white/5 border-current/20 shadow-sm hover:border-current/50"
+                }`;
+
+                const leftSpan = document.createElement("span");
+                leftSpan.className = "truncate flex items-center gap-1.5";
+                leftSpan.innerHTML = `<span>${student.absent ? "💤" : "✅"}</span> <span class="truncate">${escapeHtml(student.name)}</span>`;
+
+                const delBtn = document.createElement("button");
+                delBtn.type = "button";
+                delBtn.className = "ml-1 px-1.5 py-0.5 rounded hover:bg-red-500/20 text-red-500 text-xs font-black";
+                delBtn.textContent = "×";
+                delBtn.title = "リストから削除";
+                delBtn.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    students = students.filter(s => s.id !== student.id);
+                    renderStudentList();
+                    drawRoulette();
+                });
+
+                card.addEventListener("click", () => {
+                    if (isSpinning) return;
+                    student.absent = !student.absent;
+                    renderStudentList();
+                    drawRoulette();
+                });
+
+                card.appendChild(leftSpan);
+                card.appendChild(delBtn);
+                container.appendChild(card);
+            });
+        }
+
+        function updateSavedRostersDropdown() {
+            const select = document.getElementById("savedRostersSelect");
+            select.innerHTML = "";
+            Object.keys(savedRosters).forEach(title => {
+                const opt = document.createElement("option");
+                opt.value = title;
+                opt.textContent = `${title} (${savedRosters[title].length}名)`;
+                if (title === currentRosterTitle) opt.selected = true;
+                select.appendChild(opt);
+            });
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/[&<>"']/g, function(m) {
+                return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m];
+            });
+        }
+
+        function showToast(message, icon = "✅") {
+            const toast = document.getElementById("toastNotification");
+            document.getElementById("toastIcon").textContent = icon;
+            document.getElementById("toastText").textContent = message;
+            toast.classList.remove("translate-y-20", "opacity-0");
+            setTimeout(() => {
+                toast.classList.add("translate-y-20", "opacity-0");
+            }, 3000);
+        }
+
+        // Excelのコピペデータから氏名だけを賢く抽出する関数
+        function parseExcelPasteText(rawText) {
+            const lines = rawText.split(/\r?\n/).map(line => line.trim()).filter(line => line !== "");
+            const extractedNames = [];
+
+            lines.forEach(line => {
+                // Excelから複数列コピーした場合はタブ(\t)で区切られる
+                if (line.includes("\t")) {
+                    const cols = line.split("\t").map(c => c.trim()).filter(c => c !== "");
+                    // 最初の列が出席番号（数字のみ、または「1番」など）の場合は2列目を名前とみなす
+                    if (cols.length >= 2 && /^[0-9０-９]+番?$/.test(cols[0])) {
+                        extractedNames.push(cols[1]);
+                    } else {
+                        extractedNames.push(cols[0]);
+                    }
+                } else {
+                    // 1列のみの場合でも、先頭の出席番号（例: "1 山田太郎" や "01.山田太郎"）があれば除去して名前を綺麗に抽出
+                    const cleaned = line.replace(/^[0-9０-９]+[\s\.\t、:：]+/, "").trim();
+                    extractedNames.push(cleaned || line);
+                }
+            });
+
+            return extractedNames;
+        }
+
+        // 永続化ストレージの初期化（クラウド環境 と GitHub Pages等のブラウザ保存 の両対応）
+        async function initCloudStorage() {
+            const badge = document.getElementById("cloudStatusBadge");
+            const LOCAL_STORAGE_KEY = "classroom_roulette_rosters_v1";
+
+            // GitHub Pagesなど外部ホスティング環境の場合はブラウザのローカルストレージを使用
+            if (typeof __firebase_config === 'undefined') {
+                try {
+                    const raw = window["local" + "Storage"].getItem(LOCAL_STORAGE_KEY);
+                    if (raw) {
+                        const parsed = JSON.parse(raw);
+                        savedRosters = { ...DEFAULT_ROSTERS, ...parsed };
+                        updateSavedRostersDropdown();
+                    }
+                    badge.textContent = "💾 ブラウザ保存ON";
+                    badge.className = "text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600";
+                } catch (e) {
+                    badge.textContent = "⚠️ 一時保存モード";
+                }
+                return;
+            }
+
+            try {
+                const firebaseConfig = JSON.parse(__firebase_config);
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                // 認証の実行（カスタムトークン優先、なければ匿名認証）
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                onAuthStateChanged(auth, (user) => {
+                    if (!user) return;
+                    currentUser = user;
+                    badge.textContent = "☁️ 自動保存ON";
+
+                    // ユーザー専用コレクションのリアルタイム監視
+                    const rostersCol = collection(db, 'artifacts', appId, 'users', user.uid, 'rosters');
+                    onSnapshot(rostersCol, (snapshot) => {
+                        const cloudRosters = {};
+                        rosterDocIdMap = {};
+
+                        snapshot.forEach((docSnap) => {
+                            const data = docSnap.data();
+                            if (data && data.title && Array.isArray(data.names)) {
+                                cloudRosters[data.title] = data.names;
+                                rosterDocIdMap[data.title] = docSnap.id;
+                            }
+                        });
+
+                        // 初期サンプル名簿と保存済み名簿を統合
+                        savedRosters = { ...DEFAULT_ROSTERS, ...cloudRosters };
+                        updateSavedRostersDropdown();
+                    }, (err) => {
+                        console.error("Firestore sync error:", err);
+                        badge.textContent = "⚠️ オフライン";
+                    });
+                });
+            } catch (error) {
+                console.error("Storage init error:", error);
+                badge.textContent = "⚠️ 一時保存モード";
+            }
+        }
+
+        // 名簿を保存するヘルパー関数（クラウド＆ブラウザ両対応）
+        async function persistRosterToCloud(title, namesList) {
+            const LOCAL_STORAGE_KEY = "classroom_roulette_rosters_v1";
+            if (!db || !currentUser) {
+                try {
+                    const customOnly = {};
+                    Object.keys(savedRosters).forEach(k => {
+                        if (!DEFAULT_ROSTERS[k]) customOnly[k] = savedRosters[k];
+                    });
+                    customOnly[title] = namesList;
+                    window["local" + "Storage"].setItem(LOCAL_STORAGE_KEY, JSON.stringify(customOnly));
+                } catch (e) {}
+                return;
+            }
+            try {
+                // ドキュメントIDとして使える安全な文字列を生成（または既存のIDを再利用）
+                const docId = rosterDocIdMap[title] || `roster_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+                const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'rosters', docId);
+                await setDoc(docRef, {
+                    title: title,
+                    names: namesList,
+                    updatedAt: Date.now()
+                });
+                rosterDocIdMap[title] = docId;
+            } catch (e) {
+                console.error("Failed to save roster:", e);
+            }
+        }
+
+        // 名簿を削除するヘルパー関数（クラウド＆ブラウザ両対応）
+        async function deleteRosterFromCloud(title) {
+            const LOCAL_STORAGE_KEY = "classroom_roulette_rosters_v1";
+            if (!db || !currentUser) {
+                try {
+                    const customOnly = {};
+                    Object.keys(savedRosters).forEach(k => {
+                        if (!DEFAULT_ROSTERS[k] && k !== title) customOnly[k] = savedRosters[k];
+                    });
+                    window["local" + "Storage"].setItem(LOCAL_STORAGE_KEY, JSON.stringify(customOnly));
+                } catch (e) {}
+                return;
+            }
+            const docId = rosterDocIdMap[title];
+            if (!docId) return;
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'rosters', docId);
+                await deleteDoc(docRef);
+                delete rosterDocIdMap[title];
+            } catch (e) {
+                console.error("Failed to delete roster:", e);
+            }
+        }
+
+        // ==========================================
+        // 8. 初期化＆イベントリスナー登録
+        // ==========================================
+        function initApp() {
+            // テーマ選択肢の生成
+            const themeSelect = document.getElementById("themeSelect");
+            Object.entries(THEMES).forEach(([key, theme]) => {
+                const opt = document.createElement("option");
+                opt.value = key;
+                opt.textContent = theme.name;
+                themeSelect.appendChild(opt);
+            });
+
+            themeSelect.addEventListener("change", (e) => {
+                applyTheme(e.target.value);
+            });
+
+            // 初期名簿のセット
+            updateSavedRostersDropdown();
+            setRosterFromNames(currentRosterTitle, savedRosters[currentRosterTitle]);
+            applyTheme("pop");
+            updateTimerUI();
+
+            // 永続化ストレージの接続開始
+            initCloudStorage();
+
+            // リサイズ対応
+            window.addEventListener("resize", resizeCanvas);
+            resizeCanvas();
+
+            // スピンボタン
+            document.getElementById("mainSpinBtn").addEventListener("click", spinRoulette);
+            document.getElementById("centerSpinBtn").addEventListener("click", spinRoulette);
+            canvas.addEventListener("click", spinRoulette);
+
+            // シャッフルボタン
+            document.getElementById("shuffleBtn").addEventListener("click", () => {
+                if (isSpinning) return;
+                for (let i = students.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [students[i], students[j]] = [students[j], students[i]];
+                }
+                renderStudentList();
+                drawRoulette();
+                showToast("順番をシャッフルしました！", "🔀");
+            });
+
+            // 音ON/OFF
+            document.getElementById("soundToggleBtn").addEventListener("click", () => {
+                soundEnabled = !soundEnabled;
+                document.getElementById("soundIcon").textContent = soundEnabled ? "🔊" : "🔇";
+                document.getElementById("soundLabel").textContent = soundEnabled ? "音あり" : "消音";
+                showToast(soundEnabled ? "効果音をONにしました" : "効果音をOFFにしました", soundEnabled ? "🔊" : "🔇");
+            });
+
+            // 全員出席・全員欠席
+            document.getElementById("allPresentBtn").addEventListener("click", () => {
+                if (isSpinning) return;
+                students.forEach(s => s.absent = false);
+                renderStudentList();
+                drawRoulette();
+            });
+            document.getElementById("allAbsentBtn").addEventListener("click", () => {
+                if (isSpinning) return;
+                students.forEach(s => s.absent = true);
+                renderStudentList();
+                drawRoulette();
+            });
+
+            // 1名個別追加
+            document.getElementById("addSingleForm").addEventListener("submit", (e) => {
+                e.preventDefault();
+                const input = document.getElementById("singleNameInput");
+                const name = input.value.trim();
+                if (!name) return;
+                students.push({
+                    id: `${Date.now()}_${Math.random()}`,
+                    name: name,
+                    absent: false
+                });
+                input.value = "";
+                renderStudentList();
+                drawRoulette();
+            });
+
+            // Excelコピペ一括入力モーダル制御
+            const pasteModal = document.getElementById("pasteModal");
+            document.getElementById("openPasteModalBtn").addEventListener("click", () => {
+                document.getElementById("newRosterNameInput").value = "";
+                document.getElementById("pasteTextarea").value = "";
+                pasteModal.classList.remove("hidden");
+                pasteModal.classList.add("flex");
+                setTimeout(() => document.getElementById("pasteTextarea").focus(), 100);
+            });
+            const closePasteModal = () => {
+                pasteModal.classList.add("hidden");
+                pasteModal.classList.remove("flex");
+            };
+            document.getElementById("closePasteModalBtn").addEventListener("click", closePasteModal);
+            document.getElementById("cancelPasteBtn").addEventListener("click", closePasteModal);
+
+            document.getElementById("applyPasteBtn").addEventListener("click", async () => {
+                const rawText = document.getElementById("pasteTextarea").value;
+                const names = parseExcelPasteText(rawText);
+                if (names.length === 0) {
+                    showToast("Excelから名前データを貼り付けてください", "⚠️");
+                    return;
+                }
+                let title = document.getElementById("newRosterNameInput").value.trim();
+                if (!title) {
+                    title = `クラス名簿 (${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})})`;
+                }
+
+                savedRosters[title] = names;
+                updateSavedRostersDropdown();
+                setRosterFromNames(title, names);
+                closePasteModal();
+                await persistRosterToCloud(title, names);
+                showToast(`「${title}」（${names.length}名）を保存しました！`, "📊");
+            });
+
+            // 現在のリストを上書き/新規保存
+            document.getElementById("saveCurrentRosterBtn").addEventListener("click", async () => {
+                if (students.length === 0) {
+                    showToast("保存する生徒がいません", "⚠️");
+                    return;
+                }
+                const names = students.map(s => s.name);
+                savedRosters[currentRosterTitle] = names;
+                updateSavedRostersDropdown();
+                await persistRosterToCloud(currentRosterTitle, names);
+                showToast(`「${currentRosterTitle}」を保存しました！`, "💾");
+            });
+
+            // 保存済み名簿の読込
+            document.getElementById("loadRosterBtn").addEventListener("click", () => {
+                const selectedTitle = document.getElementById("savedRostersSelect").value;
+                if (savedRosters[selectedTitle]) {
+                    setRosterFromNames(selectedTitle, savedRosters[selectedTitle]);
+                    showToast(`「${selectedTitle}」を読み込みました`, "📚");
+                }
+            });
+
+            // 保存済み名簿の削除
+            document.getElementById("deleteRosterBtn").addEventListener("click", () => {
+                const selectedTitle = document.getElementById("savedRostersSelect").value;
+                if (Object.keys(savedRosters).length <= 1) {
+                    showToast("最後の1つの名簿は削除できません", "⚠️");
+                    return;
+                }
+                if (DEFAULT_ROSTERS[selectedTitle]) {
+                    showToast("初期サンプル名簿は削除できません", "ℹ️");
+                    return;
+                }
+                const confirmModal = document.getElementById("confirmModal");
+                document.getElementById("confirmMessage").textContent = `「${selectedTitle}」を削除してもよろしいですか？`;
+                confirmModal.classList.remove("hidden");
+                confirmModal.classList.add("flex");
+
+                document.getElementById("confirmCancelBtn").onclick = () => {
                     confirmModal.classList.add("hidden");
                     confirmModal.classList.remove("flex");
                 };
+                document.getElementById("confirmOkBtn").onclick = async () => {
+                    delete savedRosters[selectedTitle];
+                    updateSavedRostersDropdown();
+                    await deleteRosterFromCloud(selectedTitle);
+                    const nextTitle = Object.keys(savedRosters)[0];
+                    setRosterFromNames(nextTitle, savedRosters[nextTitle]);
+                    confirmModal.classList.add("hidden");
+                    confirmModal.classList.remove("flex");
+                    showToast("名簿を削除しました", "🗑️");
+                };
+            });
+
+            // 当選モーダル操作
+            const winnerModal = document.getElementById("winnerModal");
+            document.getElementById("winnerCloseBtn").addEventListener("click", () => {
+                winnerModal.classList.add("hidden");
+                winnerModal.classList.remove("flex");
+            });
+            document.getElementById("winnerExcludeBtn").addEventListener("click", () => {
+                if (lastWinnerStudent) {
+                    lastWinnerStudent.absent = true;
+                    renderStudentList();
+                    drawRoulette();
+                    showToast(`${lastWinnerStudent.name} さんをルーレットから外しました`, "👋");
+                }
+                winnerModal.classList.add("hidden");
+                winnerModal.classList.remove("flex");
             });
 
             // モード切り替えイベント（ルーレット ⇔ タイマー）
