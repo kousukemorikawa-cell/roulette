@@ -1,0 +1,438 @@
+<!-- ... existing code ... -->
+    <!-- ヘッダー -->
+    <header class="theme-card border-b px-4 py-3 shadow-sm sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3 sm:gap-4">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl sm:text-3xl" id="themeIcon">🎯</span>
+                    <h1 class="text-lg sm:text-2xl font-black tracking-tight" id="appTitle">ミラクル・ルーレット</h1>
+                </div>
+
+                <!-- モード切り替えタブ（ルーレット ⇔ タイマー） -->
+                <div class="flex items-center bg-black/10 dark:bg-white/10 p-1 rounded-xl">
+                    <button id="modeRouletteBtn" class="px-3 py-1 rounded-lg text-xs sm:text-sm font-black transition shadow-sm bg-white text-slate-900 cursor-pointer">
+                        🎯 ルーレット
+                    </button>
+                    <button id="modeTimerBtn" class="px-3 py-1 rounded-lg text-xs sm:text-sm font-bold opacity-75 hover:opacity-100 transition cursor-pointer">
+                        ⏱️ タイマー
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+                <!-- テーマ選択ドロップダウン -->
+<!-- ... existing code ... -->
+    <!-- メインコンテンツ -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- 左側：ルーレット／タイマー切り替えエリア (7カラム) -->
+        <div class="lg:col-span-7 flex flex-col items-center justify-center theme-card rounded-3xl p-4 sm:p-8 shadow-xl border relative overflow-hidden min-h-[540px]">
+            
+            <!-- 装飾用背景テキスト（古文やRockなどの雰囲気出し） -->
+            <div id="bgWatermark" class="absolute inset-0 flex items-center justify-center text-8xl sm:text-9xl font-black opacity-5 pointer-events-none select-none overflow-hidden whitespace-nowrap">
+                POP!
+            </div>
+
+            <!-- ================= ルーレットビュー ================= -->
+            <div id="rouletteView" class="w-full flex flex-col items-center z-10">
+                <!-- 現在の参加人数バッジ -->
+                <div class="w-full flex justify-between items-center mb-2">
+                    <span class="text-xs sm:text-sm font-bold px-3 py-1 rounded-full bg-black/10 dark:bg-white/10">
+                        現在クラス: <span id="currentClassNameDisplay" class="underline">サンプル名簿</span>
+                    </span>
+                    <span class="text-xs sm:text-sm font-bold px-3 py-1 rounded-full bg-black/10 dark:bg-white/10">
+                        参加: <span id="activeCountDisplay" class="text-base font-black">0</span> / <span id="totalCountDisplay">0</span> 名
+                    </span>
+                </div>
+
+                <!-- ルーレット本体コンテナ -->
+                <div class="relative w-full max-w-[440px] aspect-square my-2 flex items-center justify-center">
+                    <!-- 当たりを指す針（上部中央） -->
+                    <div id="roulettePointer" class="absolute -top-3 left-1/2 -translate-x-1/2 z-20 drop-shadow-lg transition-transform origin-top">
+                        <svg width="44" height="54" viewBox="0 0 44 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M22 54L3.81347 16.5C1.5 11.5 5.5 4 12 4H32C38.5 4 42.5 11.5 40.1865 16.5L22 54Z" fill="#EF4444" stroke="#FFFFFF" stroke-width="3"/>
+                            <circle cx="22" cy="14" r="5" fill="#FFFFFF"/>
+                        </svg>
+                    </div>
+
+                    <!-- キャンバス -->
+                    <canvas id="rouletteCanvas" class="w-full h-full rounded-full shadow-2xl cursor-pointer"></canvas>
+
+                    <!-- 中央のスピンボタン -->
+                    <button id="centerSpinBtn" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 sm:w-24 sm:h-24 rounded-full font-black text-base sm:text-lg shadow-xl border-4 border-white flex flex-col items-center justify-center transition-transform hover:scale-105 active:scale-95 z-20 cursor-pointer select-none" style="background-color: var(--accent-color); color: #fff;">
+                        <span id="spinBtnLabel">START</span>
+                    </button>
+                </div>
+
+                <!-- コントロールボタン群 -->
+                <div class="w-full max-w-md flex flex-wrap items-center justify-center gap-3 mt-4">
+                    <button id="mainSpinBtn" class="flex-1 min-w-[160px] py-3.5 px-6 rounded-2xl font-black text-lg sm:text-xl text-white shadow-lg hover:brightness-110 active:scale-95 transition flex items-center justify-center gap-2 cursor-pointer" style="background-color: var(--accent-color);">
+                        <span>🎲</span> <span id="mainSpinText">ルーレットを回す！</span>
+                    </button>
+                    
+                    <button id="shuffleBtn" class="py-3.5 px-4 rounded-2xl font-bold text-sm border-2 border-current/20 hover:bg-black/5 active:scale-95 transition flex items-center gap-1 cursor-pointer" title="順番をシャッフル">
+                        <span>🔀</span> シャッフル
+                    </button>
+                </div>
+            </div>
+
+            <!-- ================= タイマービュー ================= -->
+            <div id="timerView" class="hidden w-full flex-col items-center justify-center z-10 py-2">
+                <div class="w-full flex justify-between items-center mb-4">
+                    <span class="text-xs sm:text-sm font-bold px-3 py-1 rounded-full bg-black/10 dark:bg-white/10">
+                        ⏱️ シンキング・グループワーク用タイマー
+                    </span>
+                    <span id="timerStatusBadge" class="text-xs sm:text-sm font-bold px-3 py-1 rounded-full bg-black/10 dark:bg-white/10">
+                        待機中
+                    </span>
+                </div>
+
+                <!-- 円形プログレスタイマー -->
+                <div class="relative w-64 h-64 sm:w-80 sm:h-80 my-4 flex items-center justify-center">
+                    <svg class="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
+                        <circle cx="50" cy="50" r="44" stroke="currentColor" stroke-width="6" fill="transparent" class="opacity-15" />
+                        <circle id="timerProgressRing" cx="50" cy="50" r="44" stroke="var(--accent-color)" stroke-width="6" stroke-dasharray="276.46" stroke-dashoffset="0" stroke-linecap="round" fill="transparent" class="transition-all duration-200" />
+                    </svg>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center">
+                        <div id="timerDisplay" class="text-5xl sm:text-7xl font-black tracking-wider tabular-nums">
+                            03:00
+                        </div>
+                        <div class="flex items-center gap-2 mt-2">
+                            <button id="timerMinus10Btn" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-black/10 dark:bg-white/10 hover:opacity-80 cursor-pointer">-10秒</button>
+                            <button id="timerPlus10Btn" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-black/10 dark:bg-white/10 hover:opacity-80 cursor-pointer">+10秒</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- プリセット時間ボタン -->
+                <div class="flex flex-wrap justify-center gap-2 mb-5">
+                    <button class="timer-preset-btn px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold border border-current/20 hover:bg-black/5 cursor-pointer" data-seconds="30">30秒</button>
+                    <button class="timer-preset-btn px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold border border-current/20 hover:bg-black/5 cursor-pointer" data-seconds="60">1分</button>
+                    <button class="timer-preset-btn px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold border border-current/20 hover:bg-black/5 cursor-pointer" data-seconds="180">3分</button>
+                    <button class="timer-preset-btn px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold border border-current/20 hover:bg-black/5 cursor-pointer" data-seconds="300">5分</button>
+                    <button class="timer-preset-btn px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold border border-current/20 hover:bg-black/5 cursor-pointer" data-seconds="600">10分</button>
+                </div>
+
+                <!-- タイマー操作ボタン -->
+                <div class="w-full max-w-md flex items-center justify-center gap-3">
+                    <button id="timerStartPauseBtn" class="flex-1 py-3.5 px-6 rounded-2xl font-black text-lg sm:text-xl text-white shadow-lg hover:brightness-110 active:scale-95 transition flex items-center justify-center gap-2 cursor-pointer" style="background-color: var(--accent-color);">
+                        <span id="timerStartIcon">▶️</span> <span id="timerStartText">スタート</span>
+                    </button>
+                    <button id="timerResetBtn" class="py-3.5 px-5 rounded-2xl font-bold text-sm border-2 border-current/20 hover:bg-black/5 active:scale-95 transition cursor-pointer">
+                        🔄 リセット
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右側：名簿管理・欠席者選択エリア (5カラム) -->
+<!-- ... existing code ... -->
+        // 永続化ストレージの初期化（クラウド環境 と GitHub Pages等のブラウザ保存 の両対応）
+        async function initCloudStorage() {
+            const badge = document.getElementById("cloudStatusBadge");
+            const LOCAL_STORAGE_KEY = "classroom_roulette_rosters_v1";
+
+            // GitHub Pagesなど外部ホスティング環境の場合はブラウザのローカルストレージを使用
+            if (typeof __firebase_config === 'undefined') {
+                try {
+                    const raw = window["local" + "Storage"].getItem(LOCAL_STORAGE_KEY);
+                    if (raw) {
+                        const parsed = JSON.parse(raw);
+                        savedRosters = { ...DEFAULT_ROSTERS, ...parsed };
+                        updateSavedRostersDropdown();
+                    }
+                    badge.textContent = "💾 ブラウザ保存ON";
+                    badge.className = "text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600";
+                } catch (e) {
+                    badge.textContent = "⚠️ 一時保存モード";
+                }
+                return;
+            }
+
+            try {
+                const firebaseConfig = JSON.parse(__firebase_config);
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+// ... existing code ... -->
+        // 名簿を保存するヘルパー関数（クラウド＆ブラウザ両対応）
+        async function persistRosterToCloud(title, namesList) {
+            const LOCAL_STORAGE_KEY = "classroom_roulette_rosters_v1";
+            if (!db || !currentUser) {
+                try {
+                    const customOnly = {};
+                    Object.keys(savedRosters).forEach(k => {
+                        if (!DEFAULT_ROSTERS[k]) customOnly[k] = savedRosters[k];
+                    });
+                    customOnly[title] = namesList;
+                    window["local" + "Storage"].setItem(LOCAL_STORAGE_KEY, JSON.stringify(customOnly));
+                } catch (e) {}
+                return;
+            }
+            try {
+                // ドキュメントIDとして使える安全な文字列を生成（または既存のIDを再利用）
+                const docId = rosterDocIdMap[title] || `roster_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+                const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'rosters', docId);
+                await setDoc(docRef, {
+                    title: title,
+                    names: namesList,
+                    updatedAt: Date.now()
+                });
+                rosterDocIdMap[title] = docId;
+            } catch (e) {
+                console.error("Failed to save roster:", e);
+            }
+        }
+
+        // 名簿を削除するヘルパー関数（クラウド＆ブラウザ両対応）
+        async function deleteRosterFromCloud(title) {
+            const LOCAL_STORAGE_KEY = "classroom_roulette_rosters_v1";
+            if (!db || !currentUser) {
+                try {
+                    const customOnly = {};
+                    Object.keys(savedRosters).forEach(k => {
+                        if (!DEFAULT_ROSTERS[k] && k !== title) customOnly[k] = savedRosters[k];
+                    });
+                    window["local" + "Storage"].setItem(LOCAL_STORAGE_KEY, JSON.stringify(customOnly));
+                } catch (e) {}
+                return;
+            }
+            const docId = rosterDocIdMap[title];
+            if (!docId) return;
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'rosters', docId);
+                await deleteDoc(docRef);
+                delete rosterDocIdMap[title];
+            } catch (e) {
+                console.error("Failed to delete roster:", e);
+            }
+        }
+
+        /**
+         * ルーレットを回転させる
+         */
+        function spinRoulette() {
+            const activeStudents = students.filter(s => !s.absent);
+            if (isSpinning) return;
+            if (activeStudents.length < 2) {
+                showToast("参加者が2名以上必要です！欠席設定を確認してください。", "⚠️");
+                return;
+            }
+
+            // 初回クリック時にAudioContextを有効化
+            if (typeof Tone !== 'undefined' && Tone.context.state !== 'running') {
+                Tone.start();
+            }
+
+            isSpinning = true;
+            document.getElementById("mainSpinBtn").disabled = true;
+            document.getElementById("mainSpinBtn").classList.add("opacity-50", "cursor-not-allowed");
+            document.getElementById("spinBtnLabel").textContent = "GO!";
+
+            // 毎回3.5秒〜5.8秒の間でランダムな回転時間にし、いつ止まるか予測できないドキドキ感を演出
+            const duration = (3.5 + Math.random() * 2.3) * 1000;
+            const startTime = performance.now();
+            const startAngle = currentAngle;
+            
+            // 回転量（最低8回転〜13回転 + ランダム角度）
+            const extraSpins = (8 + Math.floor(Math.random() * 5)) * Math.PI * 2;
+            const randomStop = Math.random() * Math.PI * 2;
+            const totalRotation = extraSpins + randomStop;
+
+            const sliceAngle = (Math.PI * 2) / activeStudents.length;
+            let lastSectorIndex = -1;
+
+            function animate(now) {
+                const elapsed = now - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+
+                // イージング（最初速く、最後は超じわじわ減速して止まる）
+                const easeOut = 1 - Math.pow(1 - progress, 4);
+                currentAngle = startAngle + totalRotation * easeOut;
+
+                // 針が境界線（ピン）を通過した瞬間に音を鳴らす＆針を揺らす
+                const normalizedAngle = (currentAngle % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+                const currentSector = Math.floor(normalizedAngle / sliceAngle);
+                if (currentSector !== lastSectorIndex) {
+                    lastSectorIndex = currentSector;
+                    playTickSound();
+                    
+                    // 針のアニメーション
+                    const pointer = document.getElementById("roulettePointer");
+                    if (pointer) {
+                        pointer.style.transform = "translateX(-50%) rotate(-18deg)";
+                        setTimeout(() => {
+                            pointer.style.transform = "translateX(-50%) rotate(0deg)";
+                        }, 60);
+                    }
+                }
+
+                drawRoulette();
+
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    isSpinning = false;
+                    document.getElementById("mainSpinBtn").disabled = false;
+                    document.getElementById("mainSpinBtn").classList.remove("opacity-50", "cursor-not-allowed");
+                    document.getElementById("spinBtnLabel").textContent = "START";
+                    announceWinner(activeStudents);
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        function updateTimerUI() {
+            const display = document.getElementById("timerDisplay");
+            const ring = document.getElementById("timerProgressRing");
+            if (!display || !ring) return;
+
+            display.textContent = formatTime(timerRemainingSeconds);
+            const circumference = 276.46; // 2 * Math.PI * 44
+            const ratio = timerTotalSeconds > 0 ? timerRemainingSeconds / timerTotalSeconds : 0;
+            ring.style.strokeDashoffset = circumference * (1 - ratio);
+
+            if (timerRemainingSeconds <= 10 && timerRemainingSeconds > 0 && isTimerRunning) {
+                display.classList.add("text-red-500");
+            } else {
+                display.classList.remove("text-red-500");
+            }
+        }
+
+        function playTimerBeep(isFinish = false) {
+            if (!soundEnabled) return;
+            if (typeof Tone !== 'undefined' && Tone.context.state !== 'running') {
+                Tone.start();
+            }
+            try {
+                const synth = new Tone.Synth().toDestination();
+                if (isFinish) {
+                    const now = Tone.now();
+                    synth.triggerAttackRelease("C5", "8n", now);
+                    synth.triggerAttackRelease("E5", "8n", now + 0.15);
+                    synth.triggerAttackRelease("G5", "8n", now + 0.3);
+                    synth.triggerAttackRelease("C6", "2n", now + 0.45);
+                } else {
+                    synth.triggerAttackRelease("A5", "32n");
+                }
+            } catch (e) {}
+        }
+
+        function toggleTimer() {
+            const btnText = document.getElementById("timerStartText");
+            const btnIcon = document.getElementById("timerStartIcon");
+            const statusBadge = document.getElementById("timerStatusBadge");
+
+            if (isTimerRunning) {
+                clearInterval(timerInterval);
+                isTimerRunning = false;
+                btnText.textContent = "再開";
+                btnIcon.textContent = "▶️";
+                statusBadge.textContent = "一時停止中";
+            } else {
+                if (timerRemainingSeconds <= 0) {
+                    timerRemainingSeconds = timerTotalSeconds;
+                }
+                if (typeof Tone !== 'undefined' && Tone.context.state !== 'running') {
+                    Tone.start();
+                }
+                isTimerRunning = true;
+                btnText.textContent = "一時停止";
+                btnIcon.textContent = "⏸️";
+                statusBadge.textContent = "カウントダウン中...";
+
+                timerInterval = setInterval(() => {
+                    timerRemainingSeconds--;
+                    updateTimerUI();
+
+                    if (timerRemainingSeconds <= 3 && timerRemainingSeconds > 0) {
+                        playTimerBeep(false);
+                    }
+
+                    if (timerRemainingSeconds <= 0) {
+                        clearInterval(timerInterval);
+                        isTimerRunning = false;
+                        btnText.textContent = "スタート";
+                        btnIcon.textContent = "▶️";
+                        statusBadge.textContent = "⏰ タイムアップ！";
+                        playTimerBeep(true);
+                        if (typeof confetti === 'function') {
+                            confetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } });
+                        }
+                    }
+                }, 1000);
+            }
+        }
+
+        function setTimerSeconds(sec) {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            timerTotalSeconds = Math.max(10, sec);
+            timerRemainingSeconds = timerTotalSeconds;
+            document.getElementById("timerStartText").textContent = "スタート";
+            document.getElementById("timerStartIcon").textContent = "▶️";
+            document.getElementById("timerStatusBadge").textContent = "待機中";
+            updateTimerUI();
+        }
+
+        /**
+         * テーマを画面全体に適用する
+         */
+// ... existing code ... -->
+                    confirmModal.classList.add("hidden");
+                    confirmModal.classList.remove("flex");
+                };
+            });
+
+            // モード切り替えイベント（ルーレット ⇔ タイマー）
+            const modeRouletteBtn = document.getElementById("modeRouletteBtn");
+            const modeTimerBtn = document.getElementById("modeTimerBtn");
+            const rouletteView = document.getElementById("rouletteView");
+            const timerView = document.getElementById("timerView");
+
+            modeRouletteBtn.addEventListener("click", () => {
+                rouletteView.classList.remove("hidden");
+                timerView.classList.add("hidden");
+                timerView.classList.remove("flex");
+                modeRouletteBtn.className = "px-3 py-1 rounded-lg text-xs sm:text-sm font-black transition shadow-sm bg-white text-slate-900 cursor-pointer";
+                modeTimerBtn.className = "px-3 py-1 rounded-lg text-xs sm:text-sm font-bold opacity-75 hover:opacity-100 transition cursor-pointer";
+                resizeCanvas();
+            });
+
+            modeTimerBtn.addEventListener("click", () => {
+                rouletteView.classList.add("hidden");
+                timerView.classList.remove("hidden");
+                timerView.classList.add("flex");
+                modeTimerBtn.className = "px-3 py-1 rounded-lg text-xs sm:text-sm font-black transition shadow-sm bg-white text-slate-900 cursor-pointer";
+                modeRouletteBtn.className = "px-3 py-1 rounded-lg text-xs sm:text-sm font-bold opacity-75 hover:opacity-100 transition cursor-pointer";
+                updateTimerUI();
+            });
+
+            // タイマー操作イベント
+            document.getElementById("timerStartPauseBtn").addEventListener("click", toggleTimer);
+            document.getElementById("timerResetBtn").addEventListener("click", () => setTimerSeconds(timerTotalSeconds));
+            document.getElementById("timerPlus10Btn").addEventListener("click", () => {
+                timerTotalSeconds += 10;
+                timerRemainingSeconds += 10;
+                updateTimerUI();
+            });
+            document.getElementById("timerMinus10Btn").addEventListener("click", () => {
+                if (timerRemainingSeconds > 10) {
+                    timerTotalSeconds = Math.max(10, timerTotalSeconds - 10);
+                    timerRemainingSeconds = Math.max(10, timerRemainingSeconds - 10);
+                    updateTimerUI();
+                }
+            });
+            document.querySelectorAll(".timer-preset-btn").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const sec = parseInt(btn.getAttribute("data-seconds"), 10);
+                    setTimerSeconds(sec);
+                });
+            });
+        }
+
+        // アプリ起動
+        window.onload = initApp;
+    </script>
+</body>
+</html>
